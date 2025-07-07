@@ -1,0 +1,9 @@
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\bin\Debug\Online_Shop_Pet_Project.exe.config
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\bin\Debug\Online_Shop_Pet_Project.exe
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\bin\Debug\Online_Shop_Pet_Project.pdb
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.csproj.AssemblyReference.cache
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.Properties.Resources.resources
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.csproj.GenerateResource.cache
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.csproj.CoreCompileInputs.cache
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.exe
+E:\с#\Online_Shop_Pet_Project\Online_Shop_Pet_Project\obj\Debug\Online_Shop_Pet_Project.pdb
