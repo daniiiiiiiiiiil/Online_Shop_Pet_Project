@@ -36,6 +36,7 @@ namespace Online_Shop_Pet_Project
         {
             InitializeComponent();
             this.isEmployee = isEmployee;
+            this.WindowState = FormWindowState.Maximized; // Полноэкранный режим
             InitializeProducts();
             InitializeOrders();
             InitializeUI();
@@ -201,17 +202,12 @@ namespace Online_Shop_Pet_Project
         private void ShowProductsPanel()
         {
             // Очищаем предыдущие панели
-            if (productsPanel != null) this.Controls.Remove(productsPanel);
-            if (productDetailsPanel != null) this.Controls.Remove(productDetailsPanel);
-            if (ordersPanel != null) this.Controls.Remove(ordersPanel);
-            if (cartPanel != null) this.Controls.Remove(cartPanel);
-            if (deliveryPanel != null) this.Controls.Remove(deliveryPanel);
-            if (profilePanel != null) this.Controls.Remove(profilePanel);
+            ClearPanels();
 
             productsPanel = new Panel
             {
-                Location = new Point(0, 180),
-                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 260),
+                Location = new Point(0, 60),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 140), // Учитываем нижнюю панель
                 AutoScroll = true,
                 BackColor = Color.White
             };
@@ -229,18 +225,18 @@ namespace Online_Shop_Pet_Project
             // Создаем элементы товаров
             int yPos = 50;
             int xPos = 20;
-            int itemCount = 0;
+            int itemsPerRow = Math.Max(1, this.ClientSize.Width / 220); // Адаптивное количество товаров в строке
 
-            foreach (var product in products)
+            for (int i = 0; i < products.Count; i++)
             {
+                var product = products[i];
                 var productItem = CreateProductItem(product, xPos, yPos);
                 productsPanel.Controls.Add(productItem);
 
-                itemCount++;
                 xPos += 220;
 
-                // Переносим на следующую строку после 4 товаров
-                if (itemCount % 4 == 0)
+                // Переносим на следующую строку
+                if ((i + 1) % itemsPerRow == 0)
                 {
                     xPos = 20;
                     yPos += 220;
@@ -248,6 +244,16 @@ namespace Online_Shop_Pet_Project
             }
 
             this.Controls.Add(productsPanel);
+        }
+
+        private void ClearPanels()
+        {
+            if (productsPanel != null) this.Controls.Remove(productsPanel);
+            if (productDetailsPanel != null) this.Controls.Remove(productDetailsPanel);
+            if (ordersPanel != null) this.Controls.Remove(ordersPanel);
+            if (cartPanel != null) this.Controls.Remove(cartPanel);
+            if (deliveryPanel != null) this.Controls.Remove(deliveryPanel);
+            if (profilePanel != null) this.Controls.Remove(profilePanel);
         }
 
         private Panel CreateProductItem(Product product, int x, int y)
@@ -1581,7 +1587,7 @@ namespace Online_Shop_Pet_Project
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 ForeColor = Color.FromArgb(70, 130, 180),
                 AutoSize = true,
-                Location = new Point(350, 180)
+                Location = new Point((this.ClientSize.Width - 300) / 2, 20)
             };
             this.Controls.Add(title);
 
@@ -1594,16 +1600,19 @@ namespace Online_Shop_Pet_Project
             };
 
             // Кнопки меню покупателя
-            var productsButton = CreateBottomButton("Товары", 0);
+            int buttonCount = 4;
+            int buttonWidth = this.ClientSize.Width / buttonCount;
+
+            var productsButton = CreateBottomButton("Товары", 0, buttonWidth);
             productsButton.Click += (s, e) => ShowProductsPanel();
 
-            var ordersButton = CreateBottomButton("Заказы", 1);
+            var ordersButton = CreateBottomButton("Заказы", 1, buttonWidth);
             ordersButton.Click += (s, e) => ShowOrdersPanel();
 
-            var cartButton = CreateBottomButton("Корзина", 2);
+            var cartButton = CreateBottomButton("Корзина", 2, buttonWidth);
             cartButton.Click += (s, e) => ShowCartPanel();
 
-            var accountButton = CreateBottomButton("Профиль", 3);
+            var accountButton = CreateBottomButton("Профиль", 3, buttonWidth);
             accountButton.Click += (s, e) => ShowProfilePanel();
 
             bottomPanel.Controls.Add(productsButton);
@@ -1612,8 +1621,24 @@ namespace Online_Shop_Pet_Project
             bottomPanel.Controls.Add(accountButton);
 
             this.Controls.Add(bottomPanel);
-        }
 
+            // Показываем товары по умолчанию
+            ShowProductsPanel();
+        }
+        private Button CreateBottomButton(string text, int index, int buttonWidth)
+        {
+            return new Button
+            {
+                Text = text,
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(buttonWidth - 10, 60),
+                Location = new Point(5 + index * buttonWidth, 10),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Tag = index
+            };
+        }
         private void ShowEmployeeRoleSelection()
         {
             // Заголовок
@@ -1808,48 +1833,5 @@ namespace Online_Shop_Pet_Project
         {
             MessageBox.Show(message);
         }
-    }
-
-    public class Product
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public decimal Price { get; set; }
-        public string ImagePath { get; set; }
-        public string Description { get; set; }
-        public double Calories { get; set; }
-        public double Protein { get; set; }
-        public double Fat { get; set; }
-        public double Carbohydrates { get; set; }
-        public double Weight { get; set; }
-        public string Dimensions { get; set; }
-    }
-
-    public class Order
-    {
-        public int Id { get; set; }
-        public DateTime Date { get; set; }
-        public string Status { get; set; }
-        public decimal Total { get; set; }
-        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
-        public string DeliveryMethod { get; set; }
-        public string PaymentMethod { get; set; }
-    }
-
-    public class OrderItem
-    {
-        public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public decimal Price { get; set; }
-        public int Quantity { get; set; }
-    }
-
-    public class UserProfile
-    {
-        public string Name { get; set; }
-        public string Phone { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string PhotoPath { get; set; }
     }
 }
