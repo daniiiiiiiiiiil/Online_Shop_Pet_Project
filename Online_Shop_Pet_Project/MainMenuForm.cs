@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Online_Shop_Pet_Project
@@ -1608,11 +1609,11 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Width = buttonWidth, // Ширина равна вычисленной ширине
-                Height = 60, // Высота равна высоте панели
+                Width = buttonWidth,
+                Height = 60,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Tag = index,
-                Margin = new Padding(0) // Убираем отступы
+                Margin = new Padding(0)
             };
         }
         private void ShowEmployeeRoleSelection()
@@ -1682,61 +1683,711 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
-            var profileButton = CreateBottomButton("Профиль", 0);
-            profileButton.Click += (s, e) => ShowMessage("Переход в профиль");
-
-            var ordersButton = CreateBottomButton("Заказы", 1);
-            ordersButton.Click += (s, e) => ShowMessage("Переход к заказам");
-
-            Button roleSpecificButton1 = null;
-            Button roleSpecificButton2 = null;
-
-            switch (userRole)
+            if (userRole == "Директор")
             {
-                case "Директор":
-                    roleSpecificButton1 = CreateBottomButton("Отчеты", 2);
-                    roleSpecificButton2 = CreateBottomButton("Управление", 3);
-                    break;
-                case "Продавец":
-                    roleSpecificButton1 = CreateBottomButton("Касса", 2);
-                    roleSpecificButton2 = CreateBottomButton("Товары", 3);
-                    break;
-                case "Курьер":
-                    roleSpecificButton1 = CreateBottomButton("Доставки", 2);
-                    roleSpecificButton2 = CreateBottomButton("Маршрут", 3);
-                    break;
-                case "Повар":
-                    roleSpecificButton1 = CreateBottomButton("Заказы", 2);
-                    roleSpecificButton2 = CreateBottomButton("Меню", 3);
-                    break;
-                case "Работник зала":
-                    roleSpecificButton1 = CreateBottomButton("Столики", 2);
-                    roleSpecificButton2 = CreateBottomButton("Бронирование", 3);
-                    break;
-                case "Техподдержка":
-                    roleSpecificButton1 = CreateBottomButton("Заявки", 2);
-                    roleSpecificButton2 = CreateBottomButton("Помощь", 3);
-                    break;
+                // Кнопки для директора
+                var hireEmployeeButton = CreateBottomButton("Принятие сотрудников", 0);
+                hireEmployeeButton.Click += (s, e) => ShowHireEmployeeForm();
+                bottomPanel.Controls.Add(hireEmployeeButton);
+
+                var receiveGoodsButton = CreateBottomButton("Принятие товара", 1);
+                receiveGoodsButton.Click += (s, e) => ShowReceiveGoodsForm();
+                bottomPanel.Controls.Add(receiveGoodsButton);
+
+                var shiftsButton = CreateBottomButton("Смены сотрудников", 2);
+                shiftsButton.Click += (s, e) => ShowShiftsManagementForm();
+                bottomPanel.Controls.Add(shiftsButton);
+
+                var disposeGoodsButton = CreateBottomButton("Утилизация товара", 3);
+                disposeGoodsButton.Click += (s, e) => ShowDisposeGoodsForm();
+                bottomPanel.Controls.Add(disposeGoodsButton);
+
+                var revenueButton = CreateBottomButton("Выручка", 4);
+                revenueButton.Click += (s, e) => ShowRevenueOptions();
+                bottomPanel.Controls.Add(revenueButton);
             }
-
-            bottomPanel.Controls.Add(profileButton);
-            bottomPanel.Controls.Add(ordersButton);
-
-            if (roleSpecificButton1 != null)
+            else
             {
-                roleSpecificButton1.Click += (s, e) => ShowMessage($"Функция {roleSpecificButton1.Text} для {userRole}");
-                bottomPanel.Controls.Add(roleSpecificButton1);
-            }
+                // Общие кнопки для других ролей
+                var profileButton = CreateBottomButton("Профиль", 0);
+                profileButton.Click += (s, e) => ShowMessage("Переход в профиль");
 
-            if (roleSpecificButton2 != null)
-            {
-                roleSpecificButton2.Click += (s, e) => ShowMessage($"Функция {roleSpecificButton2.Text} для {userRole}");
-                bottomPanel.Controls.Add(roleSpecificButton2);
+                var ordersButton = CreateBottomButton("Заказы", 1);
+                ordersButton.Click += (s, e) => ShowMessage("Переход к заказам");
+
+                bottomPanel.Controls.Add(profileButton);
+                bottomPanel.Controls.Add(ordersButton);
+
+                // Кнопки для конкретных ролей
+                switch (userRole)
+                {
+                    case "Продавец":
+                        var cashButton = CreateBottomButton("Касса", 2);
+                        cashButton.Click += (s, e) => ShowMessage("Раздел кассы");
+                        bottomPanel.Controls.Add(cashButton);
+
+                        var productsButton = CreateBottomButton("Товары", 3);
+                        productsButton.Click += (s, e) => ShowMessage("Раздел товаров");
+                        bottomPanel.Controls.Add(productsButton);
+                        break;
+
+                    case "Курьер":
+                        var deliveriesButton = CreateBottomButton("Доставки", 2);
+                        deliveriesButton.Click += (s, e) => ShowMessage("Раздел доставок");
+                        bottomPanel.Controls.Add(deliveriesButton);
+
+                        var routeButton = CreateBottomButton("Маршрут", 3);
+                        routeButton.Click += (s, e) => ShowMessage("Раздел маршрутов");
+                        bottomPanel.Controls.Add(routeButton);
+                        break;
+
+                    case "Повар":
+                        var ordersButton2 = CreateBottomButton("Заказы", 2);
+                        ordersButton2.Click += (s, e) => ShowMessage("Раздел заказов");
+                        bottomPanel.Controls.Add(ordersButton2);
+
+                        var menuButton = CreateBottomButton("Меню", 3);
+                        menuButton.Click += (s, e) => ShowMessage("Раздел меню");
+                        bottomPanel.Controls.Add(menuButton);
+                        break;
+
+                    case "Работник зала":
+                        var tablesButton = CreateBottomButton("Столики", 2);
+                        tablesButton.Click += (s, e) => ShowMessage("Раздел столиков");
+                        bottomPanel.Controls.Add(tablesButton);
+
+                        var bookingButton = CreateBottomButton("Бронирование", 3);
+                        bookingButton.Click += (s, e) => ShowMessage("Раздел бронирования");
+                        bottomPanel.Controls.Add(bookingButton);
+                        break;
+
+                    case "Техподдержка":
+                        var ticketsButton = CreateBottomButton("Заявки", 2);
+                        ticketsButton.Click += (s, e) => ShowMessage("Раздел заявок");
+                        bottomPanel.Controls.Add(ticketsButton);
+
+                        var helpButton = CreateBottomButton("Помощь", 3);
+                        helpButton.Click += (s, e) => ShowMessage("Раздел помощи");
+                        bottomPanel.Controls.Add(helpButton);
+                        break;
+                }
             }
 
             this.Controls.Add(bottomPanel);
         }
+        private void ShowRevenueOptions()
+        {
+            ClearPanels();
 
+            var revenuePanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Просмотр выручки",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            revenuePanel.Controls.Add(title);
+
+            // Стандартные периоды
+            var dayButton = new Button
+            {
+                Text = "За день",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 40),
+                Location = new Point(20, 70),
+                Font = new Font("Segoe UI", 10)
+            };
+            dayButton.Click += (s, e) => ShowRevenueReport("day");
+            revenuePanel.Controls.Add(dayButton);
+
+            var weekButton = new Button
+            {
+                Text = "За неделю",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 40),
+                Location = new Point(190, 70),
+                Font = new Font("Segoe UI", 10)
+            };
+            weekButton.Click += (s, e) => ShowRevenueReport("week");
+            revenuePanel.Controls.Add(weekButton);
+
+            var monthButton = new Button
+            {
+                Text = "За месяц",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 40),
+                Location = new Point(360, 70),
+                Font = new Font("Segoe UI", 10)
+            };
+            monthButton.Click += (s, e) => ShowRevenueReport("month");
+            revenuePanel.Controls.Add(monthButton);
+
+            var yearButton = new Button
+            {
+                Text = "За год",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 40),
+                Location = new Point(530, 70),
+                Font = new Font("Segoe UI", 10)
+            };
+            yearButton.Click += (s, e) => ShowRevenueReport("year");
+            revenuePanel.Controls.Add(yearButton);
+
+            // Выбор конкретной даты
+            var specificDateLabel = new Label
+            {
+                Text = "Конкретная дата:",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 140),
+                AutoSize = true
+            };
+            revenuePanel.Controls.Add(specificDateLabel);
+
+            var datePicker = new DateTimePicker
+            {
+                Location = new Point(20, 170),
+                Size = new Size(150, 20),
+                Format = DateTimePickerFormat.Short
+            };
+            revenuePanel.Controls.Add(datePicker);
+
+            var specificDateButton = new Button
+            {
+                Text = "Показать выручку",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(190, 170),
+                Font = new Font("Segoe UI", 10)
+            };
+            specificDateButton.Click += (s, e) => ShowRevenueReport("specific", datePicker.Value);
+            revenuePanel.Controls.Add(specificDateButton);
+
+            // Выбор периода
+            var periodLabel = new Label
+            {
+                Text = "Период:",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 220),
+                AutoSize = true
+            };
+            revenuePanel.Controls.Add(periodLabel);
+
+            var fromDateLabel = new Label
+            {
+                Text = "С:",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(20, 250),
+                AutoSize = true
+            };
+            revenuePanel.Controls.Add(fromDateLabel);
+
+            var fromDatePicker = new DateTimePicker
+            {
+                Location = new Point(50, 250),
+                Size = new Size(150, 20),
+                Format = DateTimePickerFormat.Short
+            };
+            revenuePanel.Controls.Add(fromDatePicker);
+
+            var toDateLabel = new Label
+            {
+                Text = "По:",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(220, 250),
+                AutoSize = true
+            };
+            revenuePanel.Controls.Add(toDateLabel);
+
+            var toDatePicker = new DateTimePicker
+            {
+                Location = new Point(260, 250),
+                Size = new Size(150, 20),
+                Format = DateTimePickerFormat.Short
+            };
+            revenuePanel.Controls.Add(toDatePicker);
+
+            var periodButton = new Button
+            {
+                Text = "Показать выручку за период",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(220, 30),
+                Location = new Point(20, 290),
+                Font = new Font("Segoe UI", 10)
+            };
+            periodButton.Click += (s, e) => ShowRevenueReport("period", fromDatePicker.Value, toDatePicker.Value);
+            revenuePanel.Controls.Add(periodButton);
+
+            this.Controls.Add(revenuePanel);
+        }
+
+        private void ShowRevenueReport(string period, DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            // В реальном приложении здесь бы брались данные из базы
+            decimal revenue = 0;
+            string periodText = "";
+
+            switch (period)
+            {
+                case "day":
+                    revenue = 125000;
+                    periodText = "за день";
+                    break;
+                case "week":
+                    revenue = 850000;
+                    periodText = "за неделю";
+                    break;
+                case "month":
+                    revenue = 3500000;
+                    periodText = "за месяц";
+                    break;
+                case "year":
+                    revenue = 42000000;
+                    periodText = "за год";
+                    break;
+                case "specific":
+                    revenue = new Random().Next(100000, 200000);
+                    periodText = $"за {fromDate.Value.ToShortDateString()}";
+                    break;
+                case "period":
+                    revenue = new Random().Next(500000, 1000000);
+                    periodText = $"с {fromDate.Value.ToShortDateString()} по {toDate.Value.ToShortDateString()}";
+                    break;
+            }
+
+            MessageBox.Show($"Выручка {periodText}: {revenue} ₽", "Финансовый отчет", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        private void ShowDirectorReportsPanel()
+        {
+            ClearPanels();
+
+            var reportsPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Финансовые отчеты",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            reportsPanel.Controls.Add(title);
+
+            // Revenue report options
+            var revenueGroup = new GroupBox
+            {
+                Text = "Просмотр выручки",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 60),
+                Size = new Size(this.ClientSize.Width - 60, 180),
+                BackColor = Color.White
+            };
+
+            var dayButton = new Button
+            {
+                Text = "За день",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(120, 30),
+                Location = new Point(20, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            dayButton.Click += (s, e) => ShowRevenueReport("day");
+            revenueGroup.Controls.Add(dayButton);
+
+            var weekButton = new Button
+            {
+                Text = "За неделю",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(120, 30),
+                Location = new Point(160, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            weekButton.Click += (s, e) => ShowRevenueReport("week");
+            revenueGroup.Controls.Add(weekButton);
+
+            var monthButton = new Button
+            {
+                Text = "За месяц",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(120, 30),
+                Location = new Point(300, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            monthButton.Click += (s, e) => ShowRevenueReport("month");
+            revenueGroup.Controls.Add(monthButton);
+
+            var yearButton = new Button
+            {
+                Text = "За год",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(120, 30),
+                Location = new Point(440, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            yearButton.Click += (s, e) => ShowRevenueReport("year");
+            revenueGroup.Controls.Add(yearButton);
+
+            // Custom date range
+            var dateRangeLabel = new Label
+            {
+                Text = "Выберите период:",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(20, 80),
+                AutoSize = true
+            };
+            revenueGroup.Controls.Add(dateRangeLabel);
+
+            var fromDatePicker = new DateTimePicker
+            {
+                Location = new Point(20, 110),
+                Size = new Size(150, 20),
+                Format = DateTimePickerFormat.Short
+            };
+            revenueGroup.Controls.Add(fromDatePicker);
+
+            var toLabel = new Label
+            {
+                Text = "до",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(180, 110),
+                AutoSize = true
+            };
+            revenueGroup.Controls.Add(toLabel);
+
+            var toDatePicker = new DateTimePicker
+            {
+                Location = new Point(210, 110),
+                Size = new Size(150, 20),
+                Format = DateTimePickerFormat.Short
+            };
+            revenueGroup.Controls.Add(toDatePicker);
+
+            var dateRangeButton = new Button
+            {
+                Text = "Сформировать отчет",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(380, 110),
+                Font = new Font("Segoe UI", 10)
+            };
+            dateRangeButton.Click += (s, e) => ShowRevenueReport("custom", fromDatePicker.Value, toDatePicker.Value);
+            revenueGroup.Controls.Add(dateRangeButton);
+
+            reportsPanel.Controls.Add(revenueGroup);
+
+            this.Controls.Add(reportsPanel);
+        }
+
+        private void ShowDirectorManagementPanel()
+        {
+            ClearPanels();
+
+            var managementPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Управление магазином",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            managementPanel.Controls.Add(title);
+
+            // Employee management
+            var employeesGroup = new GroupBox
+            {
+                Text = "Управление сотрудниками",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 60),
+                Size = new Size(this.ClientSize.Width - 60, 100),
+                BackColor = Color.White
+            };
+
+            var hireButton = new Button
+            {
+                Text = "Принятие сотрудников",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(20, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            hireButton.Click += (s, e) => ShowHireEmployeeForm();
+            employeesGroup.Controls.Add(hireButton);
+
+            var shiftsButton = new Button
+            {
+                Text = "Управление сменами",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(220, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            shiftsButton.Click += (s, e) => ShowShiftsManagementForm();
+            employeesGroup.Controls.Add(shiftsButton);
+
+            managementPanel.Controls.Add(employeesGroup);
+
+            // Goods management
+            var goodsGroup = new GroupBox
+            {
+                Text = "Управление товарами",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 180),
+                Size = new Size(this.ClientSize.Width - 60, 100),
+                BackColor = Color.White
+            };
+
+            var receiveButton = new Button
+            {
+                Text = "Прием товара",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(20, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            receiveButton.Click += (s, e) => ShowReceiveGoodsForm();
+            goodsGroup.Controls.Add(receiveButton);
+
+            var disposeButton = new Button
+            {
+                Text = "Утилизация товара",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(220, 30),
+                Font = new Font("Segoe UI", 10)
+            };
+            disposeButton.Click += (s, e) => ShowDisposeGoodsForm();
+            goodsGroup.Controls.Add(disposeButton);
+
+            managementPanel.Controls.Add(goodsGroup);
+
+            this.Controls.Add(managementPanel);
+        }
+
+        private void ShowHireEmployeeForm()
+        {
+            var form = new Form
+            {
+                Text = "Принятие нового сотрудника",
+                Size = new Size(500, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var nameLabel = new Label { Text = "ФИО:", Location = new Point(20, 20), AutoSize = true };
+            var nameBox = new TextBox { Location = new Point(120, 20), Size = new Size(300, 20) };
+
+            var positionLabel = new Label { Text = "Должность:", Location = new Point(20, 60), AutoSize = true };
+            var positionBox = new ComboBox { Location = new Point(120, 60), Size = new Size(300, 20) };
+            positionBox.Items.AddRange(new[] { "Продавец", "Курьер", "Повар", "Работник зала", "Техподдержка" });
+
+            var salaryLabel = new Label { Text = "Зарплата:", Location = new Point(20, 100), AutoSize = true };
+            var salaryBox = new NumericUpDown { Location = new Point(120, 100), Size = new Size(100, 20), Minimum = 10000, Maximum = 1000000 };
+
+            var startDateLabel = new Label { Text = "Дата приема:", Location = new Point(20, 140), AutoSize = true };
+            var startDatePicker = new DateTimePicker { Location = new Point(120, 140), Size = new Size(150, 20) };
+
+            var saveButton = new Button
+            {
+                Text = "Сохранить",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(150, 200),
+                DialogResult = DialogResult.OK
+            };
+            saveButton.Click += (s, e) => form.Close();
+
+            form.Controls.AddRange(new Control[] { nameLabel, nameBox, positionLabel, positionBox,
+                                        salaryLabel, salaryBox, startDateLabel, startDatePicker,
+                                        saveButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowShiftsManagementForm()
+        {
+            var form = new Form
+            {
+                Text = "Управление сменами",
+                Size = new Size(600, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var employeesList = new ListBox
+            {
+                Location = new Point(20, 20),
+                Size = new Size(200, 300),
+                SelectionMode = SelectionMode.MultiSimple
+            };
+            employeesList.Items.AddRange(new[] { "Иванов И.И.", "Петров П.П.", "Сидоров С.С.", "Кузнецова А.А." });
+
+            var dateLabel = new Label { Text = "Дата смены:", Location = new Point(250, 20), AutoSize = true };
+            var datePicker = new DateTimePicker { Location = new Point(350, 20), Size = new Size(150, 20) };
+
+            var shiftTypeLabel = new Label { Text = "Тип смены:", Location = new Point(250, 60), AutoSize = true };
+            var shiftTypeBox = new ComboBox { Location = new Point(350, 60), Size = new Size(150, 20) };
+            shiftTypeBox.Items.AddRange(new[] { "Утро (8:00-16:00)", "День (12:00-20:00)", "Вечер (16:00-24:00)" });
+
+            var saveButton = new Button
+            {
+                Text = "Назначить смены",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 30),
+                Location = new Point(350, 100),
+                DialogResult = DialogResult.OK
+            };
+            saveButton.Click += (s, e) => form.Close();
+
+            form.Controls.AddRange(new Control[] { employeesList, dateLabel, datePicker,
+                                        shiftTypeLabel, shiftTypeBox, saveButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowReceiveGoodsForm()
+        {
+            var form = new Form
+            {
+                Text = "Прием товара",
+                Size = new Size(500, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var productLabel = new Label { Text = "Товар:", Location = new Point(20, 20), AutoSize = true };
+            var productBox = new ComboBox { Location = new Point(120, 20), Size = new Size(300, 20) };
+            productBox.Items.AddRange(products.Select(p => p.Name).ToArray());
+
+            var quantityLabel = new Label { Text = "Количество:", Location = new Point(20, 60), AutoSize = true };
+            var quantityBox = new NumericUpDown { Location = new Point(120, 60), Size = new Size(100, 20), Minimum = 1, Maximum = 1000 };
+
+            var supplierLabel = new Label { Text = "Поставщик:", Location = new Point(20, 100), AutoSize = true };
+            var supplierBox = new TextBox { Location = new Point(120, 100), Size = new Size(300, 20) };
+
+            var dateLabel = new Label { Text = "Дата приема:", Location = new Point(20, 140), AutoSize = true };
+            var datePicker = new DateTimePicker { Location = new Point(120, 140), Size = new Size(150, 20) };
+
+            var saveButton = new Button
+            {
+                Text = "Подтвердить прием",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(150, 30),
+                Location = new Point(150, 200),
+                DialogResult = DialogResult.OK
+            };
+            saveButton.Click += (s, e) => form.Close();
+
+            form.Controls.AddRange(new Control[] { productLabel, productBox, quantityLabel, quantityBox,
+                                        supplierLabel, supplierBox, dateLabel, datePicker,
+                                        saveButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowDisposeGoodsForm()
+        {
+            var form = new Form
+            {
+                Text = "Утилизация товара",
+                Size = new Size(500, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var productLabel = new Label { Text = "Товар:", Location = new Point(20, 20), AutoSize = true };
+            var productBox = new ComboBox { Location = new Point(120, 20), Size = new Size(300, 20) };
+            productBox.Items.AddRange(products.Select(p => p.Name).ToArray());
+
+            var quantityLabel = new Label { Text = "Количество:", Location = new Point(20, 60), AutoSize = true };
+            var quantityBox = new NumericUpDown { Location = new Point(120, 60), Size = new Size(100, 20), Minimum = 1, Maximum = 1000 };
+
+            var reasonLabel = new Label { Text = "Причина утилизации:", Location = new Point(20, 100), AutoSize = true };
+            var reasonBox = new ComboBox { Location = new Point(120, 100), Size = new Size(300, 20) };
+            reasonBox.Items.AddRange(new[] { "Истек срок годности", "Повреждение", "Другая причина" });
+
+            var dateLabel = new Label { Text = "Дата утилизации:", Location = new Point(20, 140), AutoSize = true };
+            var datePicker = new DateTimePicker { Location = new Point(120, 140), Size = new Size(150, 20) };
+
+            var saveButton = new Button
+            {
+                Text = "Подтвердить утилизацию",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 30),
+                Location = new Point(150, 200),
+                DialogResult = DialogResult.OK
+            };
+            saveButton.Click += (s, e) => form.Close();
+
+            form.Controls.AddRange(new Control[] { productLabel, productBox, quantityLabel, quantityBox,
+                                        reasonLabel, reasonBox, dateLabel, datePicker,
+                                        saveButton });
+
+            form.ShowDialog();
+        }
         private Button CreateBottomButton(string text, int index)
         {
             int buttonWidth = this.ClientSize.Width / 4;
