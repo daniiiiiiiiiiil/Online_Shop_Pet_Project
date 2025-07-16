@@ -47,6 +47,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Delivery.cs" />
+    <Compile Include="HallOrder.cs" />
+    <Compile Include="HallTask.cs" />
     <Compile Include="Ingredient.cs" />
     <Compile Include="KitchenOrder.cs" />
     <Compile Include="LoginForm.cs">

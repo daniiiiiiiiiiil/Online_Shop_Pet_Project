@@ -23,6 +23,9 @@ namespace Online_Shop_Pet_Project
         private Panel cookOrdersPanel;
         private Panel cookMenuPanel;
         private Panel ingredientsPanel;
+        private Panel hallStaffOrdersPanel;
+        private Panel storeMapPanel;
+        private Panel hallStaffHistoryPanel;
         private List<Product> products = new List<Product>();
         private List<Order> orders = new List<Order>();
         private Order currentOrder = new Order();
@@ -254,6 +257,9 @@ namespace Online_Shop_Pet_Project
             if (cookOrdersPanel != null) this.Controls.Remove(cookOrdersPanel);
             if (cookMenuPanel != null) this.Controls.Remove(cookMenuPanel);
             if (ingredientsPanel != null) this.Controls.Remove(ingredientsPanel);
+            if (hallStaffOrdersPanel != null) this.Controls.Remove(hallStaffOrdersPanel);
+            if (storeMapPanel != null) this.Controls.Remove(storeMapPanel);
+            if (hallStaffHistoryPanel != null) this.Controls.Remove(hallStaffHistoryPanel);
         }
 
         private Panel CreateProductItem(Product product, int x, int y)
@@ -1776,6 +1782,45 @@ namespace Online_Shop_Pet_Project
                 cookIngredientsButton.Click += (s, e) => ShowIngredients();
                 bottomPanel.Controls.Add(cookIngredientsButton);
             }
+            else if (userRole == "Работник зала")
+            {
+                // Кнопки для работника зала
+                var ordersButton = CreateBottomButton("Заказы", 0);
+                ordersButton.Click += (s, e) => ShowHallStaffOrdersPanel();
+                bottomPanel.Controls.Add(ordersButton);
+
+                var mapButton = CreateBottomButton("Карта магазина", 1);
+                mapButton.Click += (s, e) => ShowStoreMap();
+                bottomPanel.Controls.Add(mapButton);
+
+                var profileButton = CreateBottomButton("Профиль", 2);
+                profileButton.Click += (s, e) => ShowProfilePanel();
+                bottomPanel.Controls.Add(profileButton);
+
+                var historyButton = CreateBottomButton("История", 3);
+                historyButton.Click += (s, e) => ShowHallStaffHistory();
+                bottomPanel.Controls.Add(historyButton);
+            }
+            else if (userRole == "Повар")
+            {
+                var ordersButton2 = CreateBottomButton("Заказы", 2);
+                ordersButton2.Click += (s, e) => ShowMessage("Раздел заказов");
+                bottomPanel.Controls.Add(ordersButton2);
+
+                var menuButton = CreateBottomButton("Меню", 3);
+                menuButton.Click += (s, e) => ShowMessage("Раздел меню");
+                bottomPanel.Controls.Add(menuButton);
+            }
+            else if (userRole == "Техподдержка")
+            {
+                var ticketsButton = CreateBottomButton("Заявки", 2);
+                ticketsButton.Click += (s, e) => ShowMessage("Раздел заявок");
+                bottomPanel.Controls.Add(ticketsButton);
+
+                var helpButton = CreateBottomButton("Помощь", 3);
+                helpButton.Click += (s, e) => ShowMessage("Раздел помощи");
+                bottomPanel.Controls.Add(helpButton);
+            }
             else
             {
                 // Общие кнопки для других ролей
@@ -1787,41 +1832,6 @@ namespace Online_Shop_Pet_Project
 
                 bottomPanel.Controls.Add(profileButton);
                 bottomPanel.Controls.Add(ordersButton);
-
-                // Кнопки для конкретных ролей
-                switch (userRole)
-                {
-
-                    case "Повар":
-                        var ordersButton2 = CreateBottomButton("Заказы", 2);
-                        ordersButton2.Click += (s, e) => ShowMessage("Раздел заказов");
-                        bottomPanel.Controls.Add(ordersButton2);
-
-                        var menuButton = CreateBottomButton("Меню", 3);
-                        menuButton.Click += (s, e) => ShowMessage("Раздел меню");
-                        bottomPanel.Controls.Add(menuButton);
-                        break;
-
-                    case "Работник зала":
-                        var tablesButton = CreateBottomButton("Столики", 2);
-                        tablesButton.Click += (s, e) => ShowMessage("Раздел столиков");
-                        bottomPanel.Controls.Add(tablesButton);
-
-                        var bookingButton = CreateBottomButton("Бронирование", 3);
-                        bookingButton.Click += (s, e) => ShowMessage("Раздел бронирования");
-                        bottomPanel.Controls.Add(bookingButton);
-                        break;
-
-                    case "Техподдержка":
-                        var ticketsButton = CreateBottomButton("Заявки", 2);
-                        ticketsButton.Click += (s, e) => ShowMessage("Раздел заявок");
-                        bottomPanel.Controls.Add(ticketsButton);
-
-                        var helpButton = CreateBottomButton("Помощь", 3);
-                        helpButton.Click += (s, e) => ShowMessage("Раздел помощи");
-                        bottomPanel.Controls.Add(helpButton);
-                        break;
-                }
             }
 
             this.Controls.Add(bottomPanel);
@@ -3705,7 +3715,303 @@ namespace Online_Shop_Pet_Project
             form.Controls.AddRange(new Control[] { quantityLabel, quantityBox, commentLabel, commentBox, saveButton });
             form.ShowDialog();
         }
+        private void ShowHallStaffOrdersPanel()
+        {
+            ClearPanels();
 
+            hallStaffOrdersPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Заказы для сборки",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            hallStaffOrdersPanel.Controls.Add(title);
+
+            // Пример данных о заказах
+            var orders = new List<HallOrder>
+    {
+        new HallOrder { Id = 1001, Type = "Самовывоз", Items = "Смартфон Samsung, Наушники Sony", Status = "В обработке", Location = "Зал 1" },
+        new HallOrder { Id = 1002, Type = "Доставка", Items = "Пицца Маргарита, Салат Цезарь", Status = "Готов к сборке", Location = "Кухня" },
+        new HallOrder { Id = 1003, Type = "Самовывоз", Items = "Книга 'Clean Code'", Status = "Готов к выдаче", Location = "Секция 5" }
+    };
+
+            int yPos = 60;
+            foreach (var order in orders)
+            {
+                var orderPanel = new Panel
+                {
+                    Location = new Point(20, yPos),
+                    Size = new Size(this.ClientSize.Width - 40, 120),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.White
+                };
+
+                var idLabel = new Label
+                {
+                    Text = $"Заказ #{order.Id}",
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                    Location = new Point(10, 10),
+                    AutoSize = true
+                };
+                orderPanel.Controls.Add(idLabel);
+
+                var typeLabel = new Label
+                {
+                    Text = $"Тип: {order.Type}",
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(150, 12),
+                    AutoSize = true
+                };
+                orderPanel.Controls.Add(typeLabel);
+
+                var itemsLabel = new Label
+                {
+                    Text = $"Товары: {order.Items}",
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 35),
+                    AutoSize = false,
+                    Size = new Size(this.ClientSize.Width - 200, 40)
+                };
+                orderPanel.Controls.Add(itemsLabel);
+
+                var locationLabel = new Label
+                {
+                    Text = $"Расположение: {order.Location}",
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 75),
+                    AutoSize = true
+                };
+                orderPanel.Controls.Add(locationLabel);
+
+                var statusLabel = new Label
+                {
+                    Text = $"Статус: {order.Status}",
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    ForeColor = GetHallOrderStatusColor(order.Status),
+                    Location = new Point(this.ClientSize.Width - 150, 75),
+                    AutoSize = true
+                };
+                orderPanel.Controls.Add(statusLabel);
+
+                if (order.Status == "Готов к сборке")
+                {
+                    var prepareButton = new Button
+                    {
+                        Text = "Собрать заказ",
+                        BackColor = Color.FromArgb(70, 130, 180),
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(120, 30),
+                        Location = new Point(this.ClientSize.Width - 280, 75),
+                        Font = new Font("Segoe UI", 9),
+                        Tag = order.Id
+                    };
+                    prepareButton.Click += (s, e) => MarkOrderAsReady(order.Id);
+                    hallStaffOrdersPanel.Controls.Add(prepareButton);
+                }
+
+                var locationButton = new Button
+                {
+                    Text = "Показать на карте",
+                    BackColor = Color.FromArgb(100, 150, 200),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Size = new Size(140, 25),
+                    Location = new Point(this.ClientSize.Width - 280, 40),
+                    Font = new Font("Segoe UI", 8),
+                    Tag = order.Id
+                };
+                locationButton.Click += (s, e) => ShowProductLocation(order.Id);
+                hallStaffOrdersPanel.Controls.Add(locationButton);
+
+                hallStaffOrdersPanel.Controls.Add(orderPanel);
+                yPos += 130;
+            }
+
+            this.Controls.Add(hallStaffOrdersPanel);
+        }
+
+        private Color GetHallOrderStatusColor(string status)
+        {
+            switch (status)
+            {
+                case "В обработке": return Color.Orange;
+                case "Готов к сборке": return Color.Blue;
+                case "Собран": return Color.Green;
+                case "Отменен": return Color.Red;
+                default: return Color.Black;
+            }
+        }
+
+        // Карта магазина
+        private void ShowStoreMap()
+        {
+            ClearPanels();
+
+            storeMapPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Карта магазина",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            storeMapPanel.Controls.Add(title);
+
+            // Заглушка для карты
+            var mapImage = new PictureBox
+            {
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 100),
+                Location = new Point(20, 60),
+                Image = LoadImageOrDefault("art/store_map.jpg", this.ClientSize.Width - 40, this.ClientSize.Height - 100)
+            };
+            storeMapPanel.Controls.Add(mapImage);
+
+            // Легенда карты
+            var legend = new Label
+            {
+                Text = "Легенда:\n" +
+                       "🟥 - Электроника\n" +
+                       "🟦 - Продукты\n" +
+                       "🟩 - Книги\n" +
+                       "🟨 - Одежда",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(this.ClientSize.Width - 200, 70),
+                AutoSize = true,
+                BackColor = Color.WhiteSmoke,
+                Padding = new Padding(10)
+            };
+            storeMapPanel.Controls.Add(legend);
+
+            this.Controls.Add(storeMapPanel);
+        }
+
+        // Показать расположение товара
+        private void ShowProductLocation(int orderId)
+        {
+            // В реальном приложении здесь будет логика определения местоположения
+            var locations = new Dictionary<int, string>
+    {
+        {1001, "Секция электроники, стеллаж A3"},
+        {1002, "Кухня, холодильник B2"},
+        {1003, "Секция книг, стеллаж D7"}
+    };
+
+            if (locations.ContainsKey(orderId))
+            {
+                MessageBox.Show($"Товары заказа #{orderId} находятся:\n{locations[orderId]}", "Расположение товаров");
+            }
+            else
+            {
+                MessageBox.Show($"Расположение для заказа #{orderId} не найдено", "Ошибка");
+            }
+        }
+
+        // Отметить заказ как собранный
+        private void MarkOrderAsReady(int orderId)
+        {
+            // В реальном приложении здесь будет обновление статуса в БД
+            MessageBox.Show($"Заказ #{orderId} отмечен как собранный и готов к выдаче!", "Статус заказа");
+            ShowHallStaffOrdersPanel(); // Обновляем список
+        }
+
+        // История выполненных заданий
+        private void ShowHallStaffHistory()
+        {
+            ClearPanels();
+
+            hallStaffHistoryPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "История выполненных заданий",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            hallStaffHistoryPanel.Controls.Add(title);
+
+            // Пример истории
+            var historyItems = new List<HallTask>
+    {
+        new HallTask { Date = DateTime.Now.AddDays(-1), Description = "Сбор заказа #1001 для самовывоза", Status = "Выполнено" },
+        new HallTask { Date = DateTime.Now.AddDays(-2), Description = "Подготовка товаров для доставки #1002", Status = "Выполнено" },
+        new HallTask { Date = DateTime.Now.AddDays(-3), Description = "Вынос товаров в торговый зал", Status = "Выполнено" }
+    };
+
+            int yPos = 60;
+            foreach (var task in historyItems)
+            {
+                var taskPanel = new Panel
+                {
+                    Location = new Point(20, yPos),
+                    Size = new Size(this.ClientSize.Width - 40, 60),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.White
+                };
+
+                var dateLabel = new Label
+                {
+                    Text = task.Date.ToString("dd.MM.yyyy HH:mm"),
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 10),
+                    AutoSize = true
+                };
+                taskPanel.Controls.Add(dateLabel);
+
+                var descLabel = new Label
+                {
+                    Text = task.Description,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    Location = new Point(150, 10),
+                    AutoSize = true
+                };
+                taskPanel.Controls.Add(descLabel);
+
+                var statusLabel = new Label
+                {
+                    Text = task.Status,
+                    Font = new Font("Segoe UI", 10),
+                    ForeColor = Color.Green,
+                    Location = new Point(this.ClientSize.Width - 100, 10),
+                    AutoSize = true
+                };
+                taskPanel.Controls.Add(statusLabel);
+
+                hallStaffHistoryPanel.Controls.Add(taskPanel);
+                yPos += 70;
+            }
+
+            this.Controls.Add(hallStaffHistoryPanel);
+        }
+
+     
         private void ShowMessage(string message)
         {
             MessageBox.Show(message);
