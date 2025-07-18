@@ -26,6 +26,8 @@ namespace Online_Shop_Pet_Project
         private Panel hallStaffOrdersPanel;
         private Panel storeMapPanel;
         private Panel hallStaffHistoryPanel;
+        private Panel helpPanel;
+        private Panel ticketsPanel;
         private List<Product> products = new List<Product>();
         private List<Order> orders = new List<Order>();
         private Order currentOrder = new Order();
@@ -260,6 +262,8 @@ namespace Online_Shop_Pet_Project
             if (hallStaffOrdersPanel != null) this.Controls.Remove(hallStaffOrdersPanel);
             if (storeMapPanel != null) this.Controls.Remove(storeMapPanel);
             if (hallStaffHistoryPanel != null) this.Controls.Remove(hallStaffHistoryPanel);
+            if (helpPanel != null) this.Controls.Remove(helpPanel);
+            if (ticketsPanel != null) this.Controls.Remove(ticketsPanel);
         }
 
         private Panel CreateProductItem(Product product, int x, int y)
@@ -1813,12 +1817,12 @@ namespace Online_Shop_Pet_Project
             }
             else if (userRole == "Техподдержка")
             {
-                var ticketsButton = CreateBottomButton("Заявки", 2);
-                ticketsButton.Click += (s, e) => ShowMessage("Раздел заявок");
+                var ticketsButton = CreateBottomButton("Заявки", 0);
+                ticketsButton.Click += (s, e) => ShowSupportTicketsPanel();
                 bottomPanel.Controls.Add(ticketsButton);
 
-                var helpButton = CreateBottomButton("Помощь", 3);
-                helpButton.Click += (s, e) => ShowMessage("Раздел помощи");
+                var helpButton = CreateBottomButton("Справка", 1);
+                helpButton.Click += (s, e) => ShowSupportHelpPanel();
                 bottomPanel.Controls.Add(helpButton);
             }
             else
@@ -4011,7 +4015,454 @@ namespace Online_Shop_Pet_Project
             this.Controls.Add(hallStaffHistoryPanel);
         }
 
-     
+        private void ShowSupportTicketsPanel()
+        {
+            ClearPanels();
+
+            ticketsPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Заявки в техподдержку",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            ticketsPanel.Controls.Add(title);
+
+            // Кнопка создания новой заявки
+            var newTicketButton = new Button
+            {
+                Text = "Создать новую заявку",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(180, 40),
+                Location = new Point(20, 60),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            newTicketButton.Click += (s, e) => ShowNewTicketForm();
+            ticketsPanel.Controls.Add(newTicketButton);
+
+            // Пример списка заявок
+            var tickets = new List<SupportTicket>
+    {
+        new SupportTicket { Id = 1001, Subject = "Проблема с авторизацией", Status = "В обработке", Date = DateTime.Now.AddDays(-1) },
+        new SupportTicket { Id = 1002, Subject = "Не работает сканер штрих-кодов", Status = "Решено", Date = DateTime.Now.AddDays(-3) },
+        new SupportTicket { Id = 1003, Subject = "Вопрос по отчетам", Status = "Новый", Date = DateTime.Now.AddHours(-2) }
+    };
+
+            int yPos = 120;
+            foreach (var ticket in tickets)
+            {
+                var ticketPanel = new Panel
+                {
+                    Location = new Point(20, yPos),
+                    Size = new Size(this.ClientSize.Width - 40, 80),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.White
+                };
+
+                var idLabel = new Label
+                {
+                    Text = $"Заявка #{ticket.Id}",
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                    Location = new Point(10, 10),
+                    AutoSize = true
+                };
+                ticketPanel.Controls.Add(idLabel);
+
+                var subjectLabel = new Label
+                {
+                    Text = ticket.Subject,
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 35),
+                    AutoSize = true
+                };
+                ticketPanel.Controls.Add(subjectLabel);
+
+                var statusLabel = new Label
+                {
+                    Text = ticket.Status,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    ForeColor = GetTicketStatusColor(ticket.Status),
+                    Location = new Point(this.ClientSize.Width - 150, 15),
+                    AutoSize = true
+                };
+                ticketPanel.Controls.Add(statusLabel);
+
+                var dateLabel = new Label
+                {
+                    Text = ticket.Date.ToString("dd.MM.yyyy HH:mm"),
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(this.ClientSize.Width - 150, 40),
+                    AutoSize = true
+                };
+                ticketPanel.Controls.Add(dateLabel);
+
+                var detailsButton = new Button
+                {
+                    Text = "Подробнее",
+                    BackColor = Color.FromArgb(70, 130, 180),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Size = new Size(100, 25),
+                    Location = new Point(this.ClientSize.Width - 280, 25),
+                    Font = new Font("Segoe UI", 9),
+                    Tag = ticket.Id
+                };
+                detailsButton.Click += (s, e) => ShowTicketDetails(ticket.Id);
+                ticketPanel.Controls.Add(detailsButton);
+
+                ticketsPanel.Controls.Add(ticketPanel);
+                yPos += 90;
+            }
+
+            this.Controls.Add(ticketsPanel);
+        }
+
+        private Color GetTicketStatusColor(string status)
+        {
+            switch (status)
+            {
+                case "Новый": return Color.Blue;
+                case "В обработке": return Color.Orange;
+                case "Решено": return Color.Green;
+                case "Отклонено": return Color.Red;
+                default: return Color.Black;
+            }
+        }
+
+        private void ShowNewTicketForm()
+        {
+            var form = new Form
+            {
+                Text = "Новая заявка в техподдержку",
+                Size = new Size(500, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var subjectLabel = new Label { Text = "Тема:", Location = new Point(20, 20), AutoSize = true };
+            var subjectBox = new TextBox { Location = new Point(120, 20), Size = new Size(350, 20) };
+
+            var categoryLabel = new Label { Text = "Категория:", Location = new Point(20, 60), AutoSize = true };
+            var categoryBox = new ComboBox { Location = new Point(120, 60), Size = new Size(200, 20) };
+            categoryBox.Items.AddRange(new[] { "Техническая проблема", "Вопрос по функционалу", "Другое" });
+
+            var priorityLabel = new Label { Text = "Приоритет:", Location = new Point(20, 100), AutoSize = true };
+            var priorityBox = new ComboBox { Location = new Point(120, 100), Size = new Size(150, 20) };
+            priorityBox.Items.AddRange(new[] { "Низкий", "Средний", "Высокий", "Критичный" });
+
+            var descriptionLabel = new Label { Text = "Описание:", Location = new Point(20, 140), AutoSize = true };
+            var descriptionBox = new TextBox
+            {
+                Location = new Point(120, 140),
+                Size = new Size(350, 100),
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical
+            };
+
+            var cancelButton = new Button
+            {
+                Text = "Отмена",
+                Location = new Point(150, 270),
+                Size = new Size(100, 30),
+                DialogResult = DialogResult.Cancel
+            };
+
+            var submitButton = new Button
+            {
+                Text = "Отправить",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(300, 270),
+                DialogResult = DialogResult.OK
+            };
+            submitButton.Click += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(subjectBox.Text))
+                {
+                    MessageBox.Show("Укажите тему заявки", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                MessageBox.Show("Заявка успешно отправлена в техподдержку", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                form.Close();
+            };
+
+            form.Controls.AddRange(new Control[] { subjectLabel, subjectBox, categoryLabel, categoryBox,
+                            priorityLabel, priorityBox, descriptionLabel, descriptionBox,
+                            cancelButton, submitButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowTicketDetails(int ticketId)
+        {
+            var form = new Form
+            {
+                Text = $"Заявка #{ticketId}",
+                Size = new Size(600, 500),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            // Пример данных заявки
+            var ticket = new SupportTicket
+            {
+                Id = ticketId,
+                Subject = "Проблема с авторизацией",
+                Category = "Техническая проблема",
+                Priority = "Высокий",
+                Status = "В обработке",
+                Date = DateTime.Now.AddDays(-1),
+                Description = "Не могу войти в систему, выдает ошибку 500 при попытке авторизации.",
+                Answer = "Мы работаем над решением проблемы. Попробуйте очистить кеш браузера."
+            };
+
+            var idLabel = new Label
+            {
+                Text = $"Заявка #{ticket.Id}",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(20, 20),
+                AutoSize = true
+            };
+
+            var subjectLabel = new Label
+            {
+                Text = $"Тема: {ticket.Subject}",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 50),
+                AutoSize = true
+            };
+
+            var infoPanel = new Panel
+            {
+                Location = new Point(20, 80),
+                Size = new Size(550, 100),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            var categoryLabel = new Label
+            {
+                Text = $"Категория: {ticket.Category}",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(10, 10),
+                AutoSize = true
+            };
+
+            var priorityLabel = new Label
+            {
+                Text = $"Приоритет: {ticket.Priority}",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(10, 35),
+                AutoSize = true
+            };
+
+            var statusLabel = new Label
+            {
+                Text = $"Статус: {ticket.Status}",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = GetTicketStatusColor(ticket.Status),
+                Location = new Point(10, 60),
+                AutoSize = true
+            };
+
+            var dateLabel = new Label
+            {
+                Text = $"Дата создания: {ticket.Date:dd.MM.yyyy HH:mm}",
+                Font = new Font("Segoe UI", 9),
+                Location = new Point(300, 10),
+                AutoSize = true
+            };
+
+            infoPanel.Controls.AddRange(new Control[] { categoryLabel, priorityLabel, statusLabel, dateLabel });
+
+            var descLabel = new Label
+            {
+                Text = "Описание проблемы:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(20, 190),
+                AutoSize = true
+            };
+
+            var descBox = new TextBox
+            {
+                Text = ticket.Description,
+                Location = new Point(20, 220),
+                Size = new Size(550, 100),
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Vertical
+            };
+
+            var answerLabel = new Label
+            {
+                Text = "Ответ техподдержки:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(20, 330),
+                AutoSize = true
+            };
+
+            var answerBox = new TextBox
+            {
+                Text = ticket.Answer,
+                Location = new Point(20, 360),
+                Size = new Size(550, 60),
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Vertical
+            };
+
+            var closeButton = new Button
+            {
+                Text = "Закрыть",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(470, 430),
+                DialogResult = DialogResult.OK
+            };
+
+            form.Controls.AddRange(new Control[] { idLabel, subjectLabel, infoPanel, descLabel, descBox,
+                           answerLabel, answerBox, closeButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowSupportHelpPanel()
+        {
+            ClearPanels();
+
+            helpPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Справочная информация",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            helpPanel.Controls.Add(title);
+
+            // FAQ разделы
+            var faqSections = new List<FaqSection>
+    {
+        new FaqSection
+        {
+            Title = "Общие вопросы",
+            Questions = new List<FaqQuestion>
+            {
+                new FaqQuestion { Question = "Как изменить пароль?", Answer = "Перейдите в профиль -> Личная информация -> Пароль" },
+                new FaqQuestion { Question = "Где найти историю заказов?", Answer = "В разделе 'Заказы' или в профиле" }
+            }
+        },
+        new FaqSection
+        {
+            Title = "Технические проблемы",
+            Questions = new List<FaqQuestion>
+            {
+                new FaqQuestion { Question = "Не сканируется штрих-код", Answer = "Проверьте чистоту сканера и качество печати кода" },
+                new FaqQuestion { Question = "Система зависает", Answer = "Попробуйте перезапустить приложение. Если не помогает - создайте заявку в техподдержку" }
+            }
+        }
+    };
+
+            int yPos = 60;
+            foreach (var section in faqSections)
+            {
+                var sectionLabel = new Label
+                {
+                    Text = section.Title,
+                    Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                    Location = new Point(20, yPos),
+                    AutoSize = true
+                };
+                helpPanel.Controls.Add(sectionLabel);
+                yPos += 40;
+
+                foreach (var question in section.Questions)
+                {
+                    var questionPanel = new Panel
+                    {
+                        Location = new Point(20, yPos),
+                        Size = new Size(this.ClientSize.Width - 60, 80),
+                        BorderStyle = BorderStyle.FixedSingle,
+                        BackColor = Color.WhiteSmoke
+                    };
+
+                    var questionLabel = new Label
+                    {
+                        Text = $"Q: {question.Question}",
+                        Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                        Location = new Point(10, 10),
+                        AutoSize = true
+                    };
+                    questionPanel.Controls.Add(questionLabel);
+
+                    var answerLabel = new Label
+                    {
+                        Text = $"A: {question.Answer}",
+                        Font = new Font("Segoe UI", 10),
+                        Location = new Point(10, 35),
+                        AutoSize = false,
+                        Size = new Size(this.ClientSize.Width - 90, 40)
+                    };
+                    questionPanel.Controls.Add(answerLabel);
+
+                    helpPanel.Controls.Add(questionPanel);
+                    yPos += 90;
+                }
+            }
+
+            this.Controls.Add(helpPanel);
+        }
+
+        // В класс MainMenuForm нужно добавить вспомогательные классы:
+        public class SupportTicket
+        {
+            public int Id { get; set; }
+            public string Subject { get; set; }
+            public string Category { get; set; }
+            public string Priority { get; set; }
+            public string Status { get; set; }
+            public DateTime Date { get; set; }
+            public string Description { get; set; }
+            public string Answer { get; set; }
+        }
+
+        public class FaqSection
+        {
+            public string Title { get; set; }
+            public List<FaqQuestion> Questions { get; set; }
+        }
+
+        public class FaqQuestion
+        {
+            public string Question { get; set; }
+            public string Answer { get; set; }
+        }
+
         private void ShowMessage(string message)
         {
             MessageBox.Show(message);
