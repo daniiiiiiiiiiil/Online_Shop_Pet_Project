@@ -41,7 +41,7 @@ namespace Online_Shop_Pet_Project
             Phone = "+7 (123) 456-78-90",
             Email = "ivan.ivanov@example.com",
             Password = "********",
-            PhotoPath = "art/profile_photo.jpg"
+            PhotoPath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\Person.png"
         };
 
         public MainMenuForm(bool isEmployee)
@@ -62,7 +62,7 @@ namespace Online_Shop_Pet_Project
                 Id = 1,
                 Name = "Смартфон Samsung Galaxy S23",
                 Price = 79990,
-                ImagePath = "art/products/phone1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\phone.png",
                 Description = "Флагманский смартфон с AMOLED-экраном 6.1\" и тройной камерой",
                 Calories = 0, // Для электроники калории не применимы
                 Protein = 0,
@@ -4436,31 +4436,6 @@ namespace Online_Shop_Pet_Project
             }
 
             this.Controls.Add(helpPanel);
-        }
-
-        // В класс MainMenuForm нужно добавить вспомогательные классы:
-        public class SupportTicket
-        {
-            public int Id { get; set; }
-            public string Subject { get; set; }
-            public string Category { get; set; }
-            public string Priority { get; set; }
-            public string Status { get; set; }
-            public DateTime Date { get; set; }
-            public string Description { get; set; }
-            public string Answer { get; set; }
-        }
-
-        public class FaqSection
-        {
-            public string Title { get; set; }
-            public List<FaqQuestion> Questions { get; set; }
-        }
-
-        public class FaqQuestion
-        {
-            public string Question { get; set; }
-            public string Answer { get; set; }
         }
 
         private void ShowMessage(string message)
