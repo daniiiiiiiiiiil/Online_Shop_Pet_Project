@@ -9,6 +9,20 @@ namespace Online_Shop_Pet_Project
     {
         public bool IsEmployee { get; private set; } = false;
         private bool isEmployeeRegistration = false;
+        private Color primaryColor = Color.FromArgb(30, 144, 255);
+
+        // Поля для управления видимостью элементов
+        private Label employeeDocumentsLabel;
+        private Button employeeDocumentsButton;
+        private Label employeePhotoLabel;
+        private Button employeePhotoButton;
+        private Label customerOptionalPhotoLabel;
+        private Button customerOptionalPhotoButton;
+
+        // Поля для хранения выбранных файлов
+        private string employeeDocumentsPath = "";
+        private string employeePhotoPath = "";
+        private string customerPhotoPath = "";
 
         public RegistrationForm()
         {
@@ -20,190 +34,346 @@ namespace Online_Shop_Pet_Project
         {
             // Настройки формы
             this.Text = "Регистрация в Online Shop";
-            this.Size = new Size(500, 700);
-            this.BackColor = Color.White;
+            this.Size = new Size(520, 900); // Увеличили высоту для новых элементов
+            this.BackColor = Color.WhiteSmoke;
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
-            // Логотип
+            // Градиентный фон (используем Panel с градиентом)
+            var gradientPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.WhiteSmoke
+            };
+            this.Controls.Add(gradientPanel);
+
+            // Логотип - с более современным стилем
             var logo = new PictureBox
             {
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Size = new Size(150, 150),
-                Location = new Point(175, 20),
-                Image = LoadImageOrDefault("art/logo.png", 150, 150)
+                Location = new Point(185, 20),
+                Image = LoadImageOrDefault("E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\logo.png", 150, 150),
+                BorderStyle = BorderStyle.FixedSingle
             };
 
             // Заголовок
             var title = new Label
             {
-                Text = "Подтверждение директории",
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                ForeColor = Color.FromArgb(70, 130, 180),
+                Text = "Регистрация в Online Shop",
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = primaryColor,
                 AutoSize = true,
-                Location = new Point(150, 180)
+                Location = new Point(80, 180)
             };
 
             // Группа выбора типа регистрации
-            var registrationTypeGroup = new GroupBox
+            var registrationTypeGroup = new Panel
             {
-                Text = "Выбор работы",
-                Font = new Font("Segoe UI", 10),
                 Location = new Point(50, 230),
-                Size = new Size(400, 100)
+                Size = new Size(420, 60),
+                BackColor = Color.Transparent
+            };
+            registrationTypeGroup.Paint += (s, e) =>
+            {
+                // Обводка
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                e.Graphics.DrawRectangle(new Pen(Color.LightGray, 1), 0, 0, registrationTypeGroup.Width - 1, registrationTypeGroup.Height - 1);
             };
 
             var employeeRadio = new RadioButton
             {
                 Text = "Сотрудник",
-                Location = new Point(20, 30),
+                Location = new Point(20, 20),
                 Checked = false,
-                Font = new Font("Segoe UI", 10)
+                Font = new Font("Segoe UI", 12),
+                ForeColor = Color.FromArgb(50, 50, 50),
+                AutoSize = true
             };
-            employeeRadio.CheckedChanged += (s, e) =>
-            {
-                isEmployeeRegistration = employeeRadio.Checked;
-                ToggleRegistrationFields();
-            };
-
             var customerRadio = new RadioButton
             {
                 Text = "Покупатель",
-                Location = new Point(20, 60),
+                Location = new Point(200, 20),
                 Checked = true,
-                Font = new Font("Segoe UI", 10)
+                Font = new Font("Segoe UI", 12),
+                ForeColor = Color.FromArgb(50, 50, 50),
+                AutoSize = true
+            };
+
+            employeeRadio.CheckedChanged += (s, e) =>
+            {
+                if (employeeRadio.Checked)
+                {
+                    isEmployeeRegistration = true;
+                    ToggleRegistrationFields();
+                }
+            };
+            customerRadio.CheckedChanged += (s, e) =>
+            {
+                if (customerRadio.Checked)
+                {
+                    isEmployeeRegistration = false;
+                    ToggleRegistrationFields();
+                }
             };
 
             registrationTypeGroup.Controls.Add(employeeRadio);
             registrationTypeGroup.Controls.Add(customerRadio);
 
-            // Основные поля регистрации
-            var phoneEmailLabel = new Label
+            // Основные поля
+            int labelX = 50;
+            int inputX = 50;
+            int currentY = 310;
+            int verticalSpacing = 50;
+
+            // Email/Телефон
+            var contactLabel = CreateLabel("Номер телефона / Email:", new Point(labelX, currentY));
+            var contactTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400);
+
+            currentY += verticalSpacing;
+
+            // Пароль
+            var passwordLabel = CreateLabel("Пароль:", new Point(labelX, currentY));
+            var passwordTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400, true);
+
+            currentY += verticalSpacing;
+
+            // Поля для сотрудников
+            employeeDocumentsLabel = CreateLabel("Документы для присутствия:", new Point(labelX, currentY));
+            employeeDocumentsButton = CreateButton("Загрузить документы", new Point(inputX, currentY + 25));
+            employeeDocumentsButton.Click += (s, e) =>
             {
-                Text = "Номер телефона/email:",
-                Location = new Point(50, 350),
-                Font = new Font("Segoe UI", 10)
+                var path = OpenFileDialogAndGetPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    employeeDocumentsPath = path;
+                    employeeDocumentsButton.Text = "Документы выбраны";
+                }
             };
 
-            var phoneEmailTextBox = new TextBox
+            currentY += verticalSpacing;
+
+            employeePhotoLabel = CreateLabel("Фото сотрудника:", new Point(labelX, currentY));
+            employeePhotoButton = CreateButton("Загрузить фото", new Point(inputX, currentY + 25));
+            employeePhotoButton.Click += (s, e) =>
             {
-                Location = new Point(50, 375),
-                Size = new Size(400, 30),
-                Font = new Font("Segoe UI", 12)
+                var path = OpenFileDialogAndGetPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    employeePhotoPath = path;
+                    employeePhotoButton.Text = "Фото выбрано";
+                }
             };
 
-            var passwordLabel = new Label
+            // Для покупателей (по желанию)
+            currentY += verticalSpacing;
+            customerOptionalPhotoLabel = CreateLabel("Фото (по желанию):", new Point(labelX, currentY));
+            customerOptionalPhotoButton = CreateButton("Загрузить фото", new Point(inputX, currentY + 25));
+            customerOptionalPhotoButton.Click += (s, e) =>
             {
-                Text = "Пароль:",
-                Location = new Point(50, 415),
-                Font = new Font("Segoe UI", 10)
+                var path = OpenFileDialogAndGetPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    customerPhotoPath = path;
+                    customerOptionalPhotoButton.Text = "Фото выбрано";
+                }
             };
 
-            var passwordTextBox = new TextBox
+            // CheckBox для согласия с условиями
+            currentY += verticalSpacing;
+            var termsCheckBox = new CheckBox
             {
-                Location = new Point(50, 440),
-                Size = new Size(400, 30),
-                Font = new Font("Segoe UI", 12),
-                PasswordChar = '*'
-            };
-
-            // Поля только для сотрудников (изначально скрыты)
-            var documentsLabel = new Label
-            {
-                Text = "Документы для присутствия:",
-                Location = new Point(50, 480),
+                Text = "Я согласен с условиями использования магазина",
                 Font = new Font("Segoe UI", 10),
-                Visible = false
+                AutoSize = true,
+                Location = new Point(labelX+5, currentY+10),
+                Checked = false
             };
 
-            var documentsButton = new Button
+            // Ссылка на условия использования
+            var termsLink = new LinkLabel
             {
-                Text = "Загрузить документы",
-                Location = new Point(50, 505),
-                Size = new Size(150, 30),
-                Font = new Font("Segoe UI", 9),
-                Visible = false
-            };
-
-            var photoLabel = new Label
-            {
-                Text = "Фото:",
-                Location = new Point(250, 480),
+                Text = "ознакомиться",
                 Font = new Font("Segoe UI", 10),
-                Visible = false
+                LinkColor = primaryColor,
+                ActiveLinkColor = Color.FromArgb(0, 100, 200),
+                AutoSize = true,
+                Location = new Point(labelX + 5, currentY + 40),
+                Cursor = Cursors.Hand
             };
+            termsLink.Click += (s, e) => ShowTermsDialog();
 
-            var photoButton = new Button
-            {
-                Text = "Загрузить фото",
-                Location = new Point(250, 505),
-                Size = new Size(150, 30),
-                Font = new Font("Segoe UI", 9),
-                Visible = false
-            };
-
-            // Поле фото для покупателей (по желанию)
-            var customerPhotoLabel = new Label
-            {
-                Text = "Фото (по желанию):",
-                Location = new Point(50, 480),
-                Font = new Font("Segoe UI", 10)
-            };
-
-            var customerPhotoButton = new Button
-            {
-                Text = "Загрузить фото",
-                Location = new Point(50, 505),
-                Size = new Size(150, 30),
-                Font = new Font("Segoe UI", 9)
-            };
+            currentY += 30; // Отступ после CheckBox
 
             // Кнопка регистрации
             var registerButton = new Button
             {
-                Text = "Регистрация",
+                Text = "Зарегистрироваться",
+                BackColor = primaryColor,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Size = new Size(420, 50),
+                Location = new Point(50, currentY + 50),
+                Cursor = Cursors.Hand
+            };
+            registerButton.FlatAppearance.BorderSize = 0;
+            registerButton.Click += (s, e) =>
+            {
+                if (!termsCheckBox.Checked)
+                {
+                    MessageBox.Show("Для регистрации необходимо согласиться с условиями использования магазина",
+                                  "Требуется подтверждение",
+                                  MessageBoxButtons.OK,
+                                  MessageBoxIcon.Warning);
+                    return;
+                }
+
+                ProcessRegistration();
+            };
+
+            // Текст с ссылкой на вход
+            var loginPrompt = new Label
+            {
+                Text = "Уже есть аккаунт? ",
+                Font = new Font("Segoe UI", 10),
+                ForeColor = Color.Gray,
+                AutoSize = true,
+                Location = new Point(150, currentY + 110)
+            };
+
+            var loginLink = new LinkLabel
+            {
+                Text = "Войти",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                LinkColor = primaryColor,
+                ActiveLinkColor = Color.FromArgb(0, 100, 200),
+                AutoSize = true,
+                Location = new Point(280, currentY + 110),
+                Cursor = Cursors.Hand
+            };
+            loginLink.Click += (s, e) =>
+            {
+                this.DialogResult = DialogResult.Cancel;
+                this.Close();
+            };
+
+            // Добавляем все элементы на главный контейнер
+            gradientPanel.Controls.Add(logo);
+            gradientPanel.Controls.Add(title);
+            gradientPanel.Controls.Add(registrationTypeGroup);
+            gradientPanel.Controls.Add(contactLabel);
+            gradientPanel.Controls.Add(contactTextBox);
+            gradientPanel.Controls.Add(passwordLabel);
+            gradientPanel.Controls.Add(passwordTextBox);
+            gradientPanel.Controls.Add(employeeDocumentsLabel);
+            gradientPanel.Controls.Add(employeeDocumentsButton);
+            gradientPanel.Controls.Add(employeePhotoLabel);
+            gradientPanel.Controls.Add(employeePhotoButton);
+            gradientPanel.Controls.Add(customerOptionalPhotoLabel);
+            gradientPanel.Controls.Add(customerOptionalPhotoButton);
+            gradientPanel.Controls.Add(termsCheckBox);
+            gradientPanel.Controls.Add(termsLink);
+            gradientPanel.Controls.Add(registerButton);
+            gradientPanel.Controls.Add(loginPrompt);
+            gradientPanel.Controls.Add(loginLink);
+
+            // Изначально скрываем поля для сотрудников
+            ToggleRegistrationFields();
+        }
+
+        private void ShowTermsDialog()
+        {
+            var termsForm = new Form
+            {
+                Text = "Условия использования",
+                Size = new Size(600, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                BackColor = Color.White
+            };
+
+            var textBox = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                Text = "Здесь будут условия использования сервиса...\n\n1. Пользовательское соглашение\n2. Политика конфиденциальности\n3. Условия возврата",
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None,
+                ReadOnly = true,
+                Margin = new Padding(20)
+            };
+
+            var closeButton = new Button
+            {
+                Text = "Закрыть",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = primaryColor,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
+            closeButton.FlatAppearance.BorderSize = 0;
+            closeButton.Click += (s, e) => termsForm.Close();
+
+            termsForm.Controls.Add(textBox);
+            termsForm.Controls.Add(closeButton);
+            termsForm.ShowDialog(this);
+        }
+
+        private Label CreateLabel(string text, Point location)
+        {
+            return new Label
+            {
+                Text = text,
+                Font = new Font("Segoe UI", 12),
+                ForeColor = Color.FromArgb(50, 50, 50),
+                AutoSize = true,
+                Location = location
+            };
+        }
+
+        private TextBox CreateTextBox(Point location, int width, bool isPassword = false)
+        {
+            return new TextBox
+            {
+                Location = location,
+                Size = new Size(width, 30),
+                Font = new Font("Segoe UI", 12),
+                UseSystemPasswordChar = isPassword
+            };
+        }
+
+        private Button CreateButton(string text, Point location)
+        {
+            return new Button
+            {
+                Text = text,
+                Size = new Size(180, 30),
+                Location = location,
                 BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(400, 40),
-                Location = new Point(50, 550),
-                Font = new Font("Segoe UI", 12, FontStyle.Bold)
+                Font = new Font("Segoe UI", 10),
+                Cursor = Cursors.Hand
             };
-            registerButton.FlatAppearance.BorderSize = 0;
-            registerButton.Click += (s, e) => ProcessRegistration();
-
-            // Добавление элементов на форму
-            this.Controls.Add(logo);
-            this.Controls.Add(title);
-            this.Controls.Add(registrationTypeGroup);
-            this.Controls.Add(phoneEmailLabel);
-            this.Controls.Add(phoneEmailTextBox);
-            this.Controls.Add(passwordLabel);
-            this.Controls.Add(passwordTextBox);
-            this.Controls.Add(documentsLabel);
-            this.Controls.Add(documentsButton);
-            this.Controls.Add(photoLabel);
-            this.Controls.Add(photoButton);
-            this.Controls.Add(customerPhotoLabel);
-            this.Controls.Add(customerPhotoButton);
-            this.Controls.Add(registerButton);
-
-            // Сохраняем ссылки на элементы для управления видимостью
-            employeeDocumentsLabel = documentsLabel;
-            employeeDocumentsButton = documentsButton;
-            employeePhotoLabel = photoLabel;
-            employeePhotoButton = photoButton;
-            customerOptionalPhotoLabel = customerPhotoLabel;
-            customerOptionalPhotoButton = customerPhotoButton;
         }
 
-        private Label employeeDocumentsLabel;
-        private Button employeeDocumentsButton;
-        private Label employeePhotoLabel;
-        private Button employeePhotoButton;
-        private Label customerOptionalPhotoLabel;
-        private Button customerOptionalPhotoButton;
+        private string OpenFileDialogAndGetPath()
+        {
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Title = "Выберите файл";
+                ofd.Filter = "Все файлы (*.*)|*.*";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    return ofd.FileName;
+                }
+            }
+            return "";
+        }
 
         private void ToggleRegistrationFields()
         {
@@ -224,13 +394,11 @@ namespace Online_Shop_Pet_Project
                     return Image.FromFile(path);
             }
             catch { }
-
-            // Создаем placeholder, если изображение не найдено
             Bitmap bmp = new Bitmap(width, height);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.Clear(Color.LightGray);
-                g.DrawString("Лого", new Font("Arial", 12), Brushes.Black, 10, 10);
+                g.DrawString("Лого", new Font("Arial", 14, FontStyle.Bold), Brushes.DarkGray, 10, height / 2 - 10);
             }
             return bmp;
         }
@@ -238,9 +406,11 @@ namespace Online_Shop_Pet_Project
         private void ProcessRegistration()
         {
             IsEmployee = isEmployeeRegistration;
-            MessageBox.Show(IsEmployee ?
-                "Регистрация сотрудника выполнена" :
-                "Регистрация покупателя выполнена");
+            MessageBox.Show(
+                IsEmployee ? "Регистрация сотрудника выполнена" : "Регистрация покупателя выполнена",
+                "Успех",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
 
             this.DialogResult = DialogResult.OK;
             this.Close();

@@ -46,6 +46,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatMessage.cs" />
+    <Compile Include="ChatTicket.cs" />
     <Compile Include="Delivery.cs" />
     <Compile Include="FaqQuestion.cs" />
     <Compile Include="FaqSection.cs" />
@@ -104,9 +106,15 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="art\book.jpg" />
+    <Content Include="art\coffe.jpg" />
+    <Content Include="art\employee_success.png" />
+    <Content Include="art\headphones1.jpg" />
     <Content Include="art\logo.png" />
     <Content Include="art\Person.png" />
     <Content Include="art\phone.png" />
+    <Content Include="art\pizza.png" />
+    <Content Include="art\Xiaomi_Mi_Band_7.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

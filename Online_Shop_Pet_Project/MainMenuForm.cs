@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Online_Shop_Pet_Project
@@ -28,6 +29,11 @@ namespace Online_Shop_Pet_Project
         private Panel hallStaffHistoryPanel;
         private Panel helpPanel;
         private Panel ticketsPanel;
+        private Panel historyPanel;
+        private Panel offlineOrderPanel;
+        private Panel returnPanel;
+        private Panel chatPanel;
+        private ChatTicket currentChat;
         private List<Product> products = new List<Product>();
         private List<Order> orders = new List<Order>();
         private Order currentOrder = new Order();
@@ -64,7 +70,7 @@ namespace Online_Shop_Pet_Project
                 Price = 79990,
                 ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\phone.png",
                 Description = "Флагманский смартфон с AMOLED-экраном 6.1\" и тройной камерой",
-                Calories = 0, // Для электроники калории не применимы
+                Calories = 0,
                 Protein = 0,
                 Fat = 0,
                 Carbohydrates = 0,
@@ -77,7 +83,7 @@ namespace Online_Shop_Pet_Project
                 Id = 2,
                 Name = "Наушники Sony WH-1000XM5",
                 Price = 34990,
-                ImagePath = "art/products/headphones1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\headphones1.jpg",
                 Description = "Беспроводные наушники с шумоподавлением",
                 Calories = 0,
                 Protein = 0,
@@ -92,7 +98,7 @@ namespace Online_Shop_Pet_Project
                 Id = 3,
                 Name = "Пицца Маргарита",
                 Price = 599,
-                ImagePath = "art/products/pizza1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\pizza.png",
                 Description = "Классическая пицца с томатным соусом, моцареллой и базиликом",
                 Calories = 850,
                 Protein = 35,
@@ -107,7 +113,7 @@ namespace Online_Shop_Pet_Project
                 Id = 4,
                 Name = "Фитнес-браслет Xiaomi Mi Band 7",
                 Price = 3990,
-                ImagePath = "art/products/band1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\Xiaomi_Mi_Band_7.jpg",
                 Description = "Умный браслет с мониторингом активности и сна",
                 Calories = 0,
                 Protein = 0,
@@ -122,7 +128,7 @@ namespace Online_Shop_Pet_Project
                 Id = 5,
                 Name = "Кофе зерновой Lavazza",
                 Price = 899,
-                ImagePath = "art/products/coffee1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\coffe.jpg",
                 Description = "Итальянский кофе в зернах, 1 кг",
                 Calories = 0,
                 Protein = 0,
@@ -137,7 +143,7 @@ namespace Online_Shop_Pet_Project
                 Id = 6,
                 Name = "Книга 'Clean Code'",
                 Price = 2490,
-                ImagePath = "art/products/book1.jpg",
+                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\book.jpg",
                 Description = "Роберт Мартин. Чистый код: создание, анализ и рефакторинг",
                 Calories = 0,
                 Protein = 0,
@@ -150,7 +156,6 @@ namespace Online_Shop_Pet_Project
 
         private void InitializeOrders()
         {
-            // Заполняем историю заказов (в реальном приложении это бы бралось из базы данных)
             var order1 = new Order
             {
                 Id = 1001,
@@ -208,7 +213,7 @@ namespace Online_Shop_Pet_Project
             productsPanel = new Panel
             {
                 Location = new Point(0, 0),
-                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 80), // Учитываем нижнюю панель
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 80),
                 AutoScroll = true,
                 BackColor = Color.White
             };
@@ -264,6 +269,10 @@ namespace Online_Shop_Pet_Project
             if (hallStaffHistoryPanel != null) this.Controls.Remove(hallStaffHistoryPanel);
             if (helpPanel != null) this.Controls.Remove(helpPanel);
             if (ticketsPanel != null) this.Controls.Remove(ticketsPanel);
+            if (historyPanel != null) this.Controls.Remove(historyPanel);
+            if (offlineOrderPanel != null) this.Controls.Remove(offlineOrderPanel);
+            if (returnPanel != null) this.Controls.Remove(returnPanel);
+            if (chatPanel != null) this.Controls.Remove(chatPanel);
         }
 
         private Panel CreateProductItem(Product product, int x, int y)
@@ -271,13 +280,12 @@ namespace Online_Shop_Pet_Project
             var panel = new Panel
             {
                 Location = new Point(x, y),
-                Size = new Size(200, 200),
+                Size = new Size(220, 220),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.White,
                 Tag = product.Id
             };
 
-            // Картинка товара
             var picture = new PictureBox
             {
                 SizeMode = PictureBoxSizeMode.Zoom,
@@ -324,8 +332,8 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(80, 25),
-                Location = new Point(60, 185),
+                Size = new Size(90, 25),  
+                Location = new Point(55, 180), 
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
                 Tag = product.Id
             };
@@ -767,18 +775,12 @@ namespace Online_Shop_Pet_Project
 
         private void ShowOrdersPanel()
         {
-            // Очищаем предыдущие панели
-            if (productsPanel != null) this.Controls.Remove(productsPanel);
-            if (productDetailsPanel != null) this.Controls.Remove(productDetailsPanel);
-            if (cartPanel != null) this.Controls.Remove(cartPanel);
-            if (ordersPanel != null) this.Controls.Remove(ordersPanel);
-            if (deliveryPanel != null) this.Controls.Remove(deliveryPanel);
-            if (profilePanel != null) this.Controls.Remove(profilePanel);
+            ClearPanels();
 
             ordersPanel = new Panel
             {
-                Location = new Point(0, 180),
-                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 260),
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60), // Учитываем нижнюю панель
                 AutoScroll = true,
                 BackColor = Color.White
             };
@@ -793,7 +795,6 @@ namespace Online_Shop_Pet_Project
             };
             ordersPanel.Controls.Add(title);
 
-            // История заказов
             var historyLabel = new Label
             {
                 Text = "История заказов",
@@ -818,13 +819,13 @@ namespace Online_Shop_Pet_Project
             }
             else
             {
-                int orderYPos = 90;
+                int yPos = 90;
                 foreach (var order in orders)
                 {
                     var orderPanel = new Panel
                     {
-                        Location = new Point(20, orderYPos),
-                        Size = new Size(this.ClientSize.Width - 60, 120),
+                        Location = new Point(20, yPos),
+                        Size = new Size(this.ClientSize.Width - 40, 150), // Увеличил высоту панели
                         BorderStyle = BorderStyle.FixedSingle,
                         BackColor = Color.White
                     };
@@ -859,13 +860,14 @@ namespace Online_Shop_Pet_Project
                     };
                     orderPanel.Controls.Add(totalLabel);
 
+                    // Увеличил высоту списка товаров и сделал его многострочным
                     var itemsList = new Label
                     {
                         Text = GetOrderItemsText(order),
                         Font = new Font("Segoe UI", 9),
                         ForeColor = Color.Gray,
                         AutoSize = false,
-                        Size = new Size(this.ClientSize.Width - 80, 70),
+                        Size = new Size(this.ClientSize.Width - 80, 80), // Увеличил высоту
                         Location = new Point(10, 40)
                     };
                     orderPanel.Controls.Add(itemsList);
@@ -876,8 +878,8 @@ namespace Online_Shop_Pet_Project
                         BackColor = Color.FromArgb(70, 130, 180),
                         ForeColor = Color.White,
                         FlatStyle = FlatStyle.Flat,
-                        Size = new Size(100, 25),
-                        Location = new Point(this.ClientSize.Width - 130, 85),
+                        Size = new Size(100, 30),
+                        Location = new Point(this.ClientSize.Width - 170, 110),
                         Font = new Font("Segoe UI", 9)
                     };
                     detailsButton.FlatAppearance.BorderSize = 0;
@@ -886,12 +888,13 @@ namespace Online_Shop_Pet_Project
                     orderPanel.Controls.Add(detailsButton);
 
                     ordersPanel.Controls.Add(orderPanel);
-                    orderYPos += 130;
+                    yPos += 160; // Увеличил отступ между заказами
                 }
             }
 
             this.Controls.Add(ordersPanel);
         }
+
 
         private void ShowDeliveryOptions()
         {
@@ -1093,7 +1096,6 @@ namespace Online_Shop_Pet_Project
                 ShowCartPanel();
             }
         }
-
         private void ShowOrderDetails(int orderId)
         {
             var order = orders.Find(o => o.Id == orderId);
@@ -1112,7 +1114,7 @@ namespace Online_Shop_Pet_Project
             var headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 80,
+                Height = 120, // Увеличил высоту панели
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
@@ -1142,18 +1144,18 @@ namespace Online_Shop_Pet_Project
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = GetStatusColor(order.Status),
                 AutoSize = true,
-                Location = new Point(300, 45)
+                Location = new Point(300, 15) // Переместил выше
             };
             headerPanel.Controls.Add(statusLabel);
 
-            // Добавляем информацию о доставке и оплате
+            // Информация о доставке и оплате
             var deliveryLabel = new Label
             {
                 Text = $"Способ получения: {order.DeliveryMethod}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Black,
                 AutoSize = true,
-                Location = new Point(20, 65)
+                Location = new Point(20, 70) // Изменил позицию
             };
             headerPanel.Controls.Add(deliveryLabel);
 
@@ -1163,9 +1165,20 @@ namespace Online_Shop_Pet_Project
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Black,
                 AutoSize = true,
-                Location = new Point(300, 65)
+                Location = new Point(300, 45) // Изменил позицию
             };
             headerPanel.Controls.Add(paymentLabel);
+
+            // Добавил разделитель
+            var separator = new Label
+            {
+                Text = "Состав заказа:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.Black,
+                AutoSize = true,
+                Location = new Point(20, 95)
+            };
+            headerPanel.Controls.Add(separator);
 
             detailsForm.Controls.Add(headerPanel);
 
@@ -1173,7 +1186,8 @@ namespace Online_Shop_Pet_Project
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.White
+                BackColor = Color.White,
+                Padding = new Padding(10)
             };
 
             int yPos = 10;
@@ -1184,8 +1198,8 @@ namespace Online_Shop_Pet_Project
 
                 var itemPanel = new Panel
                 {
-                    Location = new Point(10, yPos),
-                    Size = new Size(550, 80),
+                    Location = new Point(10, yPos+11+0),
+                    Size = new Size(550, 100), // Увеличил высоту панели товара
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.White
                 };
@@ -1193,20 +1207,20 @@ namespace Online_Shop_Pet_Project
                 var productImage = new PictureBox
                 {
                     SizeMode = PictureBoxSizeMode.Zoom,
-                    Size = new Size(60, 60),
+                    Size = new Size(80, 80), // Увеличил размер изображения
                     Location = new Point(10, 10),
-                    Image = LoadImageOrDefault(product.ImagePath, 60, 60)
+                    Image = LoadImageOrDefault(product.ImagePath, 80, 80)
                 };
                 itemPanel.Controls.Add(productImage);
 
                 var nameLabel = new Label
                 {
                     Text = product.Name,
-                    Font = new Font("Segoe UI", 10),
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
                     ForeColor = Color.Black,
                     AutoSize = false,
                     Size = new Size(300, 20),
-                    Location = new Point(80, 15)
+                    Location = new Point(100, 15)
                 };
                 itemPanel.Controls.Add(nameLabel);
 
@@ -1216,12 +1230,24 @@ namespace Online_Shop_Pet_Project
                     Font = new Font("Segoe UI", 10),
                     ForeColor = Color.Black,
                     AutoSize = true,
-                    Location = new Point(80, 40)
+                    Location = new Point(100, 40)
                 };
                 itemPanel.Controls.Add(priceLabel);
 
+                // Добавил описание товара
+                var descLabel = new Label
+                {
+                    Text = product.Description,
+                    Font = new Font("Segoe UI", 9),
+                    ForeColor = Color.Gray,
+                    AutoSize = false,
+                    Size = new Size(300, 40),
+                    Location = new Point(100, 60)
+                };
+                itemPanel.Controls.Add(descLabel);
+
                 itemsPanel.Controls.Add(itemPanel);
-                yPos += 90;
+                yPos += 110; // Увеличил отступ между товарами
             }
 
             var totalPanel = new Panel
@@ -1254,7 +1280,7 @@ namespace Online_Shop_Pet_Project
             profilePanel = new Panel
             {
                 Location = new Point(0, 0),
-                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60), // Учитываем нижнюю панель
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60), 
                 AutoScroll = true,
                 BackColor = Color.White
             };
@@ -1464,9 +1490,9 @@ namespace Online_Shop_Pet_Project
             int buttonHeight = 60;
 
             // Техподдержка
-            var supportButton = new Button
+            var supportQuestionsButton = new Button
             {
-                Text = "Техподдержка",
+                Text = "Часто задаваемые вопросы",
                 BackColor = Color.FromArgb(240, 240, 240),
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat,
@@ -1474,9 +1500,48 @@ namespace Online_Shop_Pet_Project
                 Location = new Point(20, 20),
                 Font = new Font("Segoe UI", 9)
             };
-            supportButton.Click += (s, e) => ShowMessage("Раздел техподдержки");
+            supportQuestionsButton.Click += (s, e) => ShowSupportHelpPanel();
+            sectionsPanel.Controls.Add(supportQuestionsButton);
+
+            var supportButton = new Button
+            {
+                Text = "Подать заявку в тех поддержку",
+                BackColor = Color.FromArgb(240, 240, 240),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(buttonWidth, buttonHeight),
+                Location = new Point(1250, 90),
+                Font = new Font("Segoe UI", 9)
+            };
+            supportButton.Click += (s, e) => ShowNewTicketForm();
             sectionsPanel.Controls.Add(supportButton);
 
+            var answerSupport = new Button
+            {
+                Text = "Ответ на заявку",
+                BackColor = Color.FromArgb(240, 240, 240),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(buttonWidth, buttonHeight),
+                Location = new Point(20, 165),
+                Font = new Font("Segoe UI", 9)
+            };
+            answerSupport.Click += (s, e) => ShowTicketDetails(1);
+            sectionsPanel.Controls.Add(answerSupport);
+
+            var ChatSupport = new Button
+            {
+                Text = "Чат с тех поддержкой",
+                BackColor = Color.FromArgb(240, 240, 240),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(buttonWidth, buttonHeight),
+                Location = new Point(30 + buttonWidth, 165),
+                Font = new Font("Segoe UI", 9)
+            };
+            ChatSupport.Click += (s, e) => ShowChatWithSupport();
+            sectionsPanel.Controls.Add(ChatSupport);
+            
             // История заказов
             var ordersButton = new Button
             {
@@ -1536,6 +1601,7 @@ namespace Online_Shop_Pet_Project
             profileContainer.Controls.Add(sectionsPanel);
             profilePanel.Controls.Add(profileContainer);
             this.Controls.Add(profilePanel);
+
         }
         private void ChangeProfilePhoto()
         {
@@ -1573,16 +1639,16 @@ namespace Online_Shop_Pet_Project
 
         private string GetOrderItemsText(Order order)
         {
-            var itemsText = "";
+            var itemsText = new StringBuilder();
             foreach (var item in order.Items)
             {
                 var product = products.Find(p => p.Id == item.ProductId);
                 if (product != null)
                 {
-                    itemsText += $"{product.Name} - {item.Quantity} x {item.Price} ₽\n";
+                    itemsText.AppendLine($"{product.Name} - {item.Quantity} x {item.Price} ₽ = {item.Quantity * item.Price} ₽");
                 }
             }
-            return itemsText.Trim();
+            return itemsText.ToString().Trim();
         }
 
         private void ShowCustomerMenu()
@@ -2523,7 +2589,7 @@ namespace Online_Shop_Pet_Project
         {
             ClearPanels();
 
-            var historyPanel = new Panel
+            historyPanel = new Panel
             {
                 Location = new Point(0, 0),
                 Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
@@ -4357,13 +4423,27 @@ namespace Online_Shop_Pet_Project
 
             var title = new Label
             {
-                Text = "Справочная информация",
+                Text = "Техническая поддержка",
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 ForeColor = Color.FromArgb(70, 130, 180),
                 AutoSize = true,
                 Location = new Point(20, 20)
             };
             helpPanel.Controls.Add(title);
+
+            // Кнопка чата с поддержкой
+            var chatButton = new Button
+            {
+                Text = "Открыть чат с поддержкой",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(250, 50),
+                Location = new Point(20, 70),
+                Font = new Font("Segoe UI", 12)
+            };
+            chatButton.Click += (s, e) => ShowChatWithSupport();
+            helpPanel.Controls.Add(chatButton);
 
             // FAQ разделы
             var faqSections = new List<FaqSection>
@@ -4437,7 +4517,179 @@ namespace Online_Shop_Pet_Project
 
             this.Controls.Add(helpPanel);
         }
+        private void ShowChatWithSupport()
+        {
+            ClearPanels();
 
+            // Создаем тестовый чат, если его нет
+            if (currentChat == null)
+            {
+                currentChat = new ChatTicket
+                {
+                    Id = new Random().Next(1000, 9999),
+                    Subject = "Общий вопрос",
+                    CreatedDate = DateTime.Now,
+                    Status = "Открыт",
+                    Messages = new List<ChatMessage>
+            {
+                new ChatMessage
+                {
+                    Sender = "Поддержка",
+                    Text = "Здравствуйте! Чем мы можем вам помочь?",
+                    Time = DateTime.Now.AddMinutes(-5),
+                    IsSupport = true
+                },
+                new ChatMessage
+                {
+                    Sender = userProfile.Name,
+                    Text = "У меня проблема с...",
+                    Time = DateTime.Now.AddMinutes(-2),
+                    IsSupport = false
+                }
+            }
+                };
+            }
+
+            chatPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                BackColor = Color.White
+            };
+
+            // Заголовок чата
+            var chatTitle = new Label
+            {
+                Text = $"Чат с поддержкой #{currentChat.Id}",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            chatPanel.Controls.Add(chatTitle);
+
+            // Панель сообщений
+            var messagesPanel = new Panel
+            {
+                Location = new Point(20, 60),
+                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 180),
+                AutoScroll = true,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.FromArgb(240, 240, 240)
+            };
+
+            // Отображаем сообщения
+            int yPos = 10;
+            foreach (var message in currentChat.Messages.OrderBy(m => m.Time))
+            {
+                var messagePanel = new Panel
+                {
+                    Location = new Point(10, yPos),
+                    Size = new Size(messagesPanel.Width - 30, 80),
+                    BackColor = message.IsSupport ? Color.LightBlue : Color.LightGreen,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+
+                var senderLabel = new Label
+                {
+                    Text = message.Sender,
+                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                    Location = new Point(10, 10),
+                    AutoSize = true
+                };
+                messagePanel.Controls.Add(senderLabel);
+
+                var timeLabel = new Label
+                {
+                    Text = message.Time.ToString("HH:mm"),
+                    Font = new Font("Segoe UI", 8),
+                    Location = new Point(messagePanel.Width - 50, 10),
+                    AutoSize = true
+                };
+                messagePanel.Controls.Add(timeLabel);
+
+                var textLabel = new Label
+                {
+                    Text = message.Text,
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(10, 30),
+                    AutoSize = false,
+                    Size = new Size(messagePanel.Width - 20, 40)
+                };
+                messagePanel.Controls.Add(textLabel);
+
+                messagesPanel.Controls.Add(messagePanel);
+                yPos += 90;
+            }
+
+            chatPanel.Controls.Add(messagesPanel);
+
+            // Поле ввода сообщения
+            var messageTextBox = new TextBox
+            {
+                Location = new Point(20, this.ClientSize.Height - 110),
+                Size = new Size(this.ClientSize.Width - 150, 40),
+                Multiline = true,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            // Кнопка отправки
+            var sendButton = new Button
+            {
+                Text = "Отправить",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 40),
+                Location = new Point(this.ClientSize.Width - 120, this.ClientSize.Height - 110),
+                Font = new Font("Segoe UI", 10)
+            };
+            sendButton.Click += (s, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(messageTextBox.Text))
+                {
+                    // Добавляем сообщение пользователя
+                    currentChat.Messages.Add(new ChatMessage
+                    {
+                        Sender = userProfile.Name,
+                        Text = messageTextBox.Text,
+                        Time = DateTime.Now,
+                        IsSupport = false
+                    });
+
+                    // "Ответ" поддержки (в реальном приложении это было бы реальным ответом)
+                    currentChat.Messages.Add(new ChatMessage
+                    {
+                        Sender = "Поддержка",
+                        Text = "Спасибо за сообщение. Мы обработаем ваш запрос и ответим в ближайшее время.",
+                        Time = DateTime.Now.AddSeconds(2),
+                        IsSupport = true
+                    });
+
+                    messageTextBox.Text = "";
+                    ShowChatWithSupport(); // Обновляем чат
+                }
+            };
+
+            // Кнопка назад
+            var backButton = new Button
+            {
+                Text = "Назад",
+                BackColor = Color.FromArgb(220, 220, 220),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(20, this.ClientSize.Height - 160),
+                Font = new Font("Segoe UI", 9)
+            };
+            backButton.Click += (s, e) => ShowSupportHelpPanel();
+
+            chatPanel.Controls.Add(messageTextBox);
+            chatPanel.Controls.Add(sendButton);
+            chatPanel.Controls.Add(backButton);
+
+            this.Controls.Add(chatPanel);
+        }
         private void ShowMessage(string message)
         {
             MessageBox.Show(message);
