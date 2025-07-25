@@ -33,6 +33,9 @@ namespace Online_Shop_Pet_Project
         private Panel offlineOrderPanel;
         private Panel returnPanel;
         private Panel chatPanel;
+        private Panel complaintsPanel;
+        private Panel chatSupportPanel;
+        private Panel knowledgePanel;
         private ChatTicket currentChat;
         private List<Product> products = new List<Product>();
         private List<Order> orders = new List<Order>();
@@ -273,6 +276,9 @@ namespace Online_Shop_Pet_Project
             if (offlineOrderPanel != null) this.Controls.Remove(offlineOrderPanel);
             if (returnPanel != null) this.Controls.Remove(returnPanel);
             if (chatPanel != null) this.Controls.Remove(chatPanel);
+            if (complaintsPanel != null) this.Controls.Remove(complaintsPanel);
+            if (chatSupportPanel != null) this.Controls.Remove(chatSupportPanel);
+            if (knowledgePanel != null) this.Controls.Remove(knowledgePanel);
         }
 
         private Panel CreateProductItem(Product product, int x, int y)
@@ -1883,13 +1889,17 @@ namespace Online_Shop_Pet_Project
             }
             else if (userRole == "Техподдержка")
             {
-                var ticketsButton = CreateBottomButton("Заявки", 0);
-                ticketsButton.Click += (s, e) => ShowSupportTicketsPanel();
-                bottomPanel.Controls.Add(ticketsButton);
+                var complaintsButton = CreateBottomButton("Жалобы", 0);
+                complaintsButton.Click += (s, e) => ShowComplaintsPanel();
+                bottomPanel.Controls.Add(complaintsButton);
 
-                var helpButton = CreateBottomButton("Справка", 1);
-                helpButton.Click += (s, e) => ShowSupportHelpPanel();
-                bottomPanel.Controls.Add(helpButton);
+                var chatButton = CreateBottomButton("Чат с клиентом", 1);
+                chatButton.Click += (s, e) => ShowSupportChatPanel();
+                bottomPanel.Controls.Add(chatButton);
+
+                var faqButton = CreateBottomButton("База знаний", 2);
+                faqButton.Click += (s, e) => ShowKnowledgeBase();
+                bottomPanel.Controls.Add(faqButton);
             }
             else
             {
@@ -4689,6 +4699,617 @@ namespace Online_Shop_Pet_Project
             chatPanel.Controls.Add(backButton);
 
             this.Controls.Add(chatPanel);
+        }
+        private void ShowComplaintsPanel()
+        {
+            ClearPanels();
+
+            complaintsPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Жалобы клиентов",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            complaintsPanel.Controls.Add(title);
+
+            // Пример списка жалоб
+            var complaints = new List<Complaint>
+    {
+        new Complaint
+        {
+            Id = 1001,
+            CustomerName = "Иванов Иван",
+            Subject = "Не пришел заказ",
+            Date = DateTime.Now.AddDays(-1),
+            Status = "Новая",
+            Message = "Заказ №12345 не был доставлен в указанный срок"
+        },
+        new Complaint
+        {
+            Id = 1002,
+            CustomerName = "Петрова Анна",
+            Subject = "Некачественный товар",
+            Date = DateTime.Now.AddHours(-3),
+            Status = "В обработке",
+            Message = "Полученный товар был поврежден"
+        }
+    };
+
+            int yPos = 60;
+            foreach (var complaint in complaints)
+            {
+                var complaintPanel = new Panel
+                {
+                    Location = new Point(20, yPos),
+                    Size = new Size(this.ClientSize.Width - 40, 120),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.White
+                };
+
+                var idLabel = new Label
+                {
+                    Text = $"Жалоба #{complaint.Id}",
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                    Location = new Point(10, 10),
+                    AutoSize = true
+                };
+                complaintPanel.Controls.Add(idLabel);
+
+                var customerLabel = new Label
+                {
+                    Text = $"Клиент: {complaint.CustomerName}",
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 35),
+                    AutoSize = true
+                };
+                complaintPanel.Controls.Add(customerLabel);
+
+                var subjectLabel = new Label
+                {
+                    Text = $"Тема: {complaint.Subject}",
+                    Font = new Font("Segoe UI", 10),
+                    Location = new Point(10, 55),
+                    AutoSize = true
+                };
+                complaintPanel.Controls.Add(subjectLabel);
+
+                var dateLabel = new Label
+                {
+                    Text = $"Дата: {complaint.Date:dd.MM.yyyy HH:mm}",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(this.ClientSize.Width - 150, 15),
+                    AutoSize = true
+                };
+                complaintPanel.Controls.Add(dateLabel);
+
+                var statusLabel = new Label
+                {
+                    Text = $"Статус: {complaint.Status}",
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    ForeColor = GetComplaintStatusColor(complaint.Status),
+                    Location = new Point(this.ClientSize.Width - 150, 40),
+                    AutoSize = true
+                };
+                complaintPanel.Controls.Add(statusLabel);
+
+                var detailsButton = new Button
+                {
+                    Text = "Подробнее",
+                    BackColor = Color.FromArgb(70, 130, 180),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Size = new Size(100, 25),
+                    Location = new Point(this.ClientSize.Width - 270, 15),
+                    Font = new Font("Segoe UI", 9),
+                    Tag = complaint.Id
+                };
+                detailsButton.Click += (s, e) => ShowComplaintDetails(complaint.Id);
+                complaintPanel.Controls.Add(detailsButton);
+
+                complaintsPanel.Controls.Add(complaintPanel);
+                yPos += 130;
+            }
+
+            this.Controls.Add(complaintsPanel);
+        }
+
+        private Color GetComplaintStatusColor(string status)
+        {
+            switch (status)
+            {
+                case "Новая": return Color.Red;
+                case "В обработке": return Color.Orange;
+                case "Решена": return Color.Green;
+                case "Отклонена": return Color.Gray;
+                default: return Color.Black;
+            }
+        }
+
+        private void ShowComplaintDetails(int complaintId)
+        {
+            // Находим жалобу по ID (в реальном приложении - из базы данных)
+            var complaint = new Complaint
+            {
+                Id = complaintId,
+                CustomerName = "Иванов Иван",
+                CustomerPhone = "+7 (123) 456-78-90",
+                Subject = "Не пришел заказ",
+                Date = DateTime.Now.AddDays(-1),
+                Status = "Новая",
+                Message = "Заказ №12345 не был доставлен в указанный срок. Обещали доставить вчера до 18:00, но курьер так и не приехал.",
+                OrderId = 12345
+            };
+
+            var form = new Form
+            {
+                Text = $"Жалоба #{complaint.Id}",
+                Size = new Size(600, 500),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var idLabel = new Label
+            {
+                Text = $"Жалоба #{complaint.Id}",
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(20, 20),
+                AutoSize = true
+            };
+
+            var customerLabel = new Label
+            {
+                Text = $"Клиент: {complaint.CustomerName}",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 50),
+                AutoSize = true
+            };
+
+            var phoneLabel = new Label
+            {
+                Text = $"Телефон: {complaint.CustomerPhone}",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 80),
+                AutoSize = true
+            };
+
+            var orderLabel = new Label
+            {
+                Text = $"Номер заказа: {complaint.OrderId}",
+                Font = new Font("Segoe UI", 12),
+                Location = new Point(20, 110),
+                AutoSize = true
+            };
+
+            var subjectLabel = new Label
+            {
+                Text = $"Тема: {complaint.Subject}",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Location = new Point(20, 140),
+                AutoSize = true
+            };
+
+            var messageLabel = new Label
+            {
+                Text = "Сообщение клиента:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(20, 170),
+                AutoSize = true
+            };
+
+            var messageBox = new TextBox
+            {
+                Text = complaint.Message,
+                Location = new Point(20, 200),
+                Size = new Size(550, 80),
+                Multiline = true,
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Vertical
+            };
+
+            var responseLabel = new Label
+            {
+                Text = "Ваш ответ:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(20, 290),
+                AutoSize = true
+            };
+
+            var responseBox = new TextBox
+            {
+                Location = new Point(20, 320),
+                Size = new Size(550, 80),
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical
+            };
+
+            var statusLabel = new Label
+            {
+                Text = "Изменить статус:",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(20, 410),
+                AutoSize = true
+            };
+
+            var statusCombo = new ComboBox
+            {
+                Location = new Point(150, 410),
+                Size = new Size(150, 20)
+            };
+            statusCombo.Items.AddRange(new[] { "Новая", "В обработке", "Решена", "Отклонена" });
+            statusCombo.SelectedItem = complaint.Status;
+
+            var saveButton = new Button
+            {
+                Text = "Сохранить",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(350, 410),
+                DialogResult = DialogResult.OK
+            };
+            saveButton.Click += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(responseBox.Text))
+                {
+                    MessageBox.Show("Введите ответ клиенту", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                MessageBox.Show("Ответ сохранен и отправлен клиенту", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            form.Controls.AddRange(new Control[] { idLabel, customerLabel, phoneLabel, orderLabel,
+                       subjectLabel, messageLabel, messageBox, responseLabel, responseBox,
+                       statusLabel, statusCombo, saveButton });
+
+            form.ShowDialog();
+        }
+
+        private void ShowSupportChatPanel()
+        {
+            ClearPanels();
+
+            chatSupportPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "Чат с клиентами",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            chatSupportPanel.Controls.Add(title);
+
+            // Список активных чатов
+            var chatsList = new ListBox
+            {
+                Location = new Point(20, 60),
+                Size = new Size(200, this.ClientSize.Height - 180),
+                Font = new Font("Segoe UI", 10)
+            };
+
+            // Пример списка чатов
+            var activeChats = new List<SupportChat>
+    {
+        new SupportChat
+        {
+            Id = 1001,
+            CustomerName = "Иванов Иван",
+            LastMessage = "Когда придет мой заказ?",
+            LastMessageTime = DateTime.Now.AddMinutes(-15),
+            UnreadCount = 2
+        },
+        new SupportChat
+        {
+            Id = 1002,
+            CustomerName = "Петрова Анна",
+            LastMessage = "Спасибо за помощь!",
+            LastMessageTime = DateTime.Now.AddHours(-2),
+            UnreadCount = 0
+        }
+    };
+
+            foreach (var chat in activeChats)
+            {
+                chatsList.Items.Add($"{chat.CustomerName} ({chat.UnreadCount} новых)");
+            }
+
+            // Панель сообщений
+            var messagesPanel = new Panel
+            {
+                Location = new Point(240, 60),
+                Size = new Size(this.ClientSize.Width - 260, this.ClientSize.Height - 180),
+                AutoScroll = true,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.FromArgb(240, 240, 240)
+            };
+
+            // Пример сообщений в чате
+            if (activeChats.Count > 0)
+            {
+                var selectedChat = activeChats[0];
+                int yPos = 10;
+
+                // Сообщения клиента
+                var clientMessage = new Panel
+                {
+                    Location = new Point(10, yPos),
+                    Size = new Size(messagesPanel.Width - 120, 60),
+                    BackColor = Color.LightGreen,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+
+                var clientLabel = new Label
+                {
+                    Text = $"{selectedChat.CustomerName} (клиент)",
+                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                    Location = new Point(10, 5),
+                    AutoSize = true
+                };
+                clientMessage.Controls.Add(clientLabel);
+
+                var clientText = new Label
+                {
+                    Text = "Здравствуйте! У меня проблема с заказом #12345",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(10, 25),
+                    AutoSize = false,
+                    Size = new Size(clientMessage.Width - 20, 30)
+                };
+                clientMessage.Controls.Add(clientText);
+
+                messagesPanel.Controls.Add(clientMessage);
+                yPos += 70;
+
+                // Ответ поддержки
+                var supportMessage = new Panel
+                {
+                    Location = new Point(messagesPanel.Width - 110, yPos),
+                    Size = new Size(100, 60),
+                    BackColor = Color.LightBlue,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+
+                var supportLabel = new Label
+                {
+                    Text = "Поддержка",
+                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                    Location = new Point(10, 5),
+                    AutoSize = true
+                };
+                supportMessage.Controls.Add(supportLabel);
+
+                var supportText = new Label
+                {
+                    Text = "Здравствуйте! Чем могу помочь?",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(10, 25),
+                    AutoSize = false,
+                    Size = new Size(supportMessage.Width - 20, 30)
+                };
+                supportMessage.Controls.Add(supportText);
+
+                messagesPanel.Controls.Add(supportMessage);
+            }
+
+            // Поле ввода сообщения
+            var messageBox = new TextBox
+            {
+                Location = new Point(240, this.ClientSize.Height - 110),
+                Size = new Size(this.ClientSize.Width - 340, 40),
+                Multiline = true,
+                Font = new Font("Segoe UI", 10)
+            };
+
+            // Кнопка отправки
+            var sendButton = new Button
+            {
+                Text = "Отправить",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(80, 40),
+                Location = new Point(this.ClientSize.Width - 90, this.ClientSize.Height - 110),
+                Font = new Font("Segoe UI", 10)
+            };
+            sendButton.Click += (s, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(messageBox.Text))
+                {
+                    // В реальном приложении здесь будет сохранение сообщения
+                    MessageBox.Show("Сообщение отправлено клиенту", "Успех");
+                    messageBox.Text = "";
+                }
+            };
+
+            chatSupportPanel.Controls.Add(chatsList);
+            chatSupportPanel.Controls.Add(messagesPanel);
+            chatSupportPanel.Controls.Add(messageBox);
+            chatSupportPanel.Controls.Add(sendButton);
+
+            this.Controls.Add(chatSupportPanel);
+        }
+
+        private void ShowKnowledgeBase()
+        {
+            ClearPanels();
+
+            knowledgePanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 60),
+                AutoScroll = true,
+                BackColor = Color.White
+            };
+
+            var title = new Label
+            {
+                Text = "База знаний техподдержки",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = Color.FromArgb(70, 130, 180),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            };
+            knowledgePanel.Controls.Add(title);
+
+            // Категории базы знаний
+            var categories = new List<KnowledgeCategory>
+    {
+        new KnowledgeCategory
+        {
+            Name = "Частые вопросы",
+            Articles = new List<string>
+            {
+                "Как проверить статус заказа",
+                "Как оформить возврат",
+                "Как изменить данные профиля"
+            }
+        },
+        new KnowledgeCategory
+        {
+            Name = "Технические проблемы",
+            Articles = new List<string>
+            {
+                "Ошибка при оплате",
+                "Не работает личный кабинет",
+                "Проблемы с мобильным приложением"
+            }
+        }
+    };
+
+            int yPos = 60;
+            foreach (var category in categories)
+            {
+                var categoryLabel = new Label
+                {
+                    Text = category.Name,
+                    Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                    Location = new Point(20, yPos),
+                    AutoSize = true
+                };
+                knowledgePanel.Controls.Add(categoryLabel);
+                yPos += 40;
+
+                foreach (var article in category.Articles)
+                {
+                    var articlePanel = new Panel
+                    {
+                        Location = new Point(40, yPos),
+                        Size = new Size(this.ClientSize.Width - 80, 50),
+                        BorderStyle = BorderStyle.FixedSingle,
+                        BackColor = Color.WhiteSmoke
+                    };
+
+                    var articleLink = new LinkLabel
+                    {
+                        Text = article,
+                        Font = new Font("Segoe UI", 10),
+                        Location = new Point(10, 15),
+                        AutoSize = true
+                    };
+                    articleLink.Click += (s, e) => ShowArticle(article);
+                    articlePanel.Controls.Add(articleLink);
+
+                    knowledgePanel.Controls.Add(articlePanel);
+                    yPos += 60;
+                }
+            }
+
+            this.Controls.Add(knowledgePanel);
+        }
+
+        private void ShowArticle(string articleTitle)
+        {
+            var form = new Form
+            {
+                Text = articleTitle,
+                Size = new Size(600, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false
+            };
+
+            var titleLabel = new Label
+            {
+                Text = articleTitle,
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Location = new Point(20, 20),
+                AutoSize = true
+            };
+
+            // Пример содержания статьи (в реальном приложении - из базы знаний)
+            var contentLabel = new Label
+            {
+                Text = GetArticleContent(articleTitle),
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(20, 60),
+                AutoSize = false,
+                Size = new Size(550, 300)
+            };
+
+            form.Controls.Add(titleLabel);
+            form.Controls.Add(contentLabel);
+            form.ShowDialog();
+        }
+
+        private string GetArticleContent(string title)
+        {
+            // В реальном приложении здесь будет запрос к базе знаний
+            switch (title)
+            {
+                case "Как проверить статус заказа":
+                    return "1. Перейдите в раздел 'Мои заказы'\n2. Найдите нужный заказ в списке\n3. Нажмите 'Подробнее' для просмотра статуса";
+                case "Ошибка при оплате":
+                    return "Если возникает ошибка при оплате:\n1. Проверьте данные карты\n2. Убедитесь, что на счету достаточно средств\n3. Попробуйте другой способ оплаты";
+                default:
+                    return "Инструкция по решению проблемы. Подробное описание шагов для решения указанной проблемы.";
+            }
+        }
+
+        // Классы для хранения данных
+        public class Complaint
+        {
+            public int Id { get; set; }
+            public string CustomerName { get; set; }
+            public string CustomerPhone { get; set; }
+            public string Subject { get; set; }
+            public DateTime Date { get; set; }
+            public string Status { get; set; }
+            public string Message { get; set; }
+            public int OrderId { get; set; }
+        }
+
+        public class SupportChat
+        {
+            public int Id { get; set; }
+            public string CustomerName { get; set; }
+            public string LastMessage { get; set; }
+            public DateTime LastMessageTime { get; set; }
+            public int UnreadCount { get; set; }
+        }
+
+        public class KnowledgeCategory
+        {
+            public string Name { get; set; }
+            public List<string> Articles { get; set; }
         }
         private void ShowMessage(string message)
         {
