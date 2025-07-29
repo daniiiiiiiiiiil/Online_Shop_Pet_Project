@@ -22,16 +22,6 @@ namespace Online_Shop_Pet_Project
             form.StartPosition = FormStartPosition.CenterScreen;
             form.FormBorderStyle = FormBorderStyle.FixedDialog;
             form.MaximizeBox = false;
-
-            if (form.isEmployee)
-            {
-                form.EmployeeHelper.ShowEmployeeRoleSelection();
-            }
-            else
-            {
-                ShowCustomerMenu();
-                form.ProductHelper.ShowProductsPanel();
-            }
         }
 
         public void ClearPanels()
