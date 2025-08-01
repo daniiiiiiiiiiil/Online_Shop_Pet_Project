@@ -208,11 +208,17 @@ namespace Online_Shop_Pet_Project
                 return;
             }
 
-            bool isEmployee = CheckIfUserIsEmployee(login, password);
-
-            var mainMenu = new MainMenuForm(isEmployee);
-            mainMenu.Show();
-            this.Hide();
+            if (DbManager.AuthenticateUser(login, password))
+            {
+                bool isEmployee = DbManager.IsEmployee(login);
+                var mainMenu = new MainMenuForm(isEmployee);
+                mainMenu.Show();
+                this.Hide();
+            }
+            else
+            {
+                MessageBox.Show("Неверный логин или пароль");
+            }
         }
 
         private bool CheckIfUserIsEmployee(string login, string password)
@@ -238,6 +244,11 @@ namespace Online_Shop_Pet_Project
                     this.Hide();
                 }
             }
+        }
+
+        private void LoginForm_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
