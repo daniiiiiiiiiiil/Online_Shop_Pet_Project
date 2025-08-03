@@ -11,99 +11,16 @@ namespace Online_Shop_Pet_Project
     public class ProductHelper
     {
         private MainMenuForm form;
-        public ProductHelper(MainMenuForm form) { this.form = form; }
-        
+        private DatabaseHelper dbHelper;
+
+        public ProductHelper(MainMenuForm form)
+        {
+            this.form = form;
+            this.dbHelper = new DatabaseHelper();
+        }
         public void InitializeProducts()
         {
-            form.products.Add(new Product
-            {
-                Id = 1,
-                Name = "Смартфон Samsung Galaxy S23",
-                Price = 79990,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\phone.png",
-                Description = "Флагманский смартфон с AMOLED-экраном 6.1\" и тройной камерой",
-                Calories = 0,
-                Protein = 0,
-                Fat = 0,
-                Carbohydrates = 0,
-                Weight = 168,
-                Dimensions = "70.9 x 146.3 x 7.6 мм"
-            });
-
-            form.products.Add(new Product
-            {
-                Id = 2,
-                Name = "Наушники Sony WH-1000XM5",
-                Price = 34990,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\headphones1.jpg",
-                Description = "Беспроводные наушники с шумоподавлением",
-                Calories = 0,
-                Protein = 0,
-                Fat = 0,
-                Carbohydrates = 0,
-                Weight = 250,
-                Dimensions = "20.4 x 24.9 x 18.7 см"
-            });
-
-            form.products.Add(new Product
-            {
-                Id = 3,
-                Name = "Пицца Маргарита",
-                Price = 599,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\pizza.png",
-                Description = "Классическая пицца с томатным соусом, моцареллой и базиликом",
-                Calories = 850,
-                Protein = 35,
-                Fat = 30,
-                Carbohydrates = 100,
-                Weight = 450,
-                Dimensions = "30 см"
-            });
-
-            form.products.Add(new Product
-            {
-                Id = 4,
-                Name = "Фитнес-браслет Xiaomi Mi Band 7",
-                Price = 3990,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\Xiaomi_Mi_Band_7.jpg",
-                Description = "Умный браслет с мониторингом активности и сна",
-                Calories = 0,
-                Protein = 0,
-                Fat = 0,
-                Carbohydrates = 0,
-                Weight = 13.5,
-                Dimensions = "46.5 x 20.7 x 12.25 мм"
-            });
-
-            form.products.Add(new Product
-            {
-                Id = 5,
-                Name = "Кофе зерновой Lavazza",
-                Price = 899,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\coffe.jpg",
-                Description = "Итальянский кофе в зернах, 1 кг",
-                Calories = 0,
-                Protein = 0,
-                Fat = 0,
-                Carbohydrates = 0,
-                Weight = 1000,
-                Dimensions = "Упаковка"
-            });
-
-            form.products.Add(new Product
-            {
-                Id = 6,
-                Name = "Книга 'Clean Code'",
-                Price = 2490,
-                ImagePath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\book.jpg",
-                Description = "Роберт Мартин. Чистый код: создание, анализ и рефакторинг",
-                Calories = 0,
-                Protein = 0,
-                Fat = 0,
-                Carbohydrates = 0,
-                Weight = 680,
-                Dimensions = "23.5 x 17.7 x 2.5 см"
-            });
+            form.products = dbHelper.LoadProducts();
         }
 
         public Panel CreateProductItem(Product product, int x, int y)

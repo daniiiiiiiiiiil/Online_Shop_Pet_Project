@@ -11,10 +11,17 @@ namespace Online_Shop_Pet_Project
     public class OrderHelper
     {
         private MainMenuForm form;
-        public OrderHelper(MainMenuForm form) { this.form = form; }
+        private DatabaseHelper dbHelper;
+
+        public OrderHelper(MainMenuForm form)
+        {
+            this.form = form;
+            this.dbHelper = new DatabaseHelper();
+        }
 
         public void InitializeOrders()
         {
+            form.orders = dbHelper.LoadOrders();
             var order1 = new Order
             {
                 Id = 1001,
@@ -172,11 +179,12 @@ namespace Online_Shop_Pet_Project
             var detailsForm = new Form
             {
                 Text = $"Детали заказа #{order.Id}",
-                Size = new Size(600, 500),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
-                BackColor = Color.White
+                BackColor = Color.White,
+                MinimumSize = new Size(600, 400),
+                MaximumSize = new Size(600, 800)
             };
 
             var headerPanel = new Panel
@@ -255,8 +263,25 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.White,
                 Padding = new Padding(10)
             };
+            var scrollPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.White
+            };
 
-            int yPos = 10;
+            var itemsContainer = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                Padding = new Padding(10),
+                BackColor = Color.White
+            };
+
+
             foreach (var item in order.Items)
             {
                 var product = form.products.Find(p => p.Id == item.ProductId);
@@ -264,8 +289,8 @@ namespace Online_Shop_Pet_Project
 
                 var itemPanel = new Panel
                 {
-                    Location = new Point(10, yPos),
                     Size = new Size(550, 100),
+                    Margin = new Padding(0, 0, 0, 10), // Отступ снизу
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.White
                 };
@@ -311,8 +336,7 @@ namespace Online_Shop_Pet_Project
                 };
                 itemPanel.Controls.Add(descLabel);
 
-                itemsPanel.Controls.Add(itemPanel);
-                yPos += 110;
+                itemsContainer.Controls.Add(itemPanel);
             }
 
             var totalPanel = new Panel
@@ -332,12 +356,21 @@ namespace Online_Shop_Pet_Project
             };
             totalPanel.Controls.Add(totalLabel);
 
-            detailsForm.Controls.Add(itemsPanel);
+            scrollPanel.Controls.Add(itemsContainer);
+            detailsForm.Controls.Add(scrollPanel);
             detailsForm.Controls.Add(totalPanel);
+            detailsForm.Controls.Add(headerPanel);
+
+            // Автоматически подбираем размер формы
+            int totalHeight = headerPanel.Height + totalPanel.Height;
+            int itemsHeight = order.Items.Count * 110; // 100 высота панели + 10 отступ
+            int maxHeight = Math.Min(800, totalHeight + itemsHeight + 40); // 40 - дополнительные отступы
+
+            detailsForm.Height = maxHeight;
+            detailsForm.StartPosition = FormStartPosition.CenterParent;
 
             detailsForm.ShowDialog();
         }
-
         public string GetOrderItemsText(Order order)
         {
             var itemsText = new StringBuilder();
@@ -365,6 +398,10 @@ namespace Online_Shop_Pet_Project
             {
                 form.currentOrder.Total += item.Price * item.Quantity;
             }
+
+            dbHelper.SaveOrder(form.currentOrder);
+
+            dbHelper.ClearCart();
 
             form.orders.Insert(0, new Order
             {

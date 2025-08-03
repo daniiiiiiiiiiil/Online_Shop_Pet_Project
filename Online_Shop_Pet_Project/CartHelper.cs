@@ -11,12 +11,34 @@ namespace Online_Shop_Pet_Project
     public class CartHelper
     {
         private MainMenuForm form;
-        public CartHelper(MainMenuForm form) { this.form = form; }
+        private DatabaseHelper dbHelper;
+
+        public CartHelper(MainMenuForm form)
+        {
+            this.form = form;
+            this.dbHelper = new DatabaseHelper();
+        }
+
+        public void LoadCart()
+        {
+            form.currentOrder.Items = dbHelper.LoadCartItems();
+
+            foreach (var item in form.currentOrder.Items)
+            {
+                var product = form.products.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product != null)
+                {
+                    item.ProductName = product.Name;
+                    item.Price = product.Price;
+                }
+            }
+        }
 
         public void ShowCartPanel()
         {
-            form.UIHelper.ClearPanels();
+            dbHelper.SaveCartItems(form.currentOrder.Items);
 
+            form.UIHelper.ClearPanels();
             form.cartPanel = new Panel
             {
                 Location = new Point(0, 0),
@@ -212,6 +234,9 @@ namespace Online_Shop_Pet_Project
                 {
                     form.currentOrder.Items.Remove(item);
                 }
+
+                dbHelper.SaveCartItems(form.currentOrder.Items);
+
                 ShowCartPanel();
             }
         }
@@ -222,6 +247,9 @@ namespace Online_Shop_Pet_Project
             if (item != null)
             {
                 form.currentOrder.Items.Remove(item);
+
+                dbHelper.SaveCartItems(form.currentOrder.Items);
+
                 ShowCartPanel();
             }
         }

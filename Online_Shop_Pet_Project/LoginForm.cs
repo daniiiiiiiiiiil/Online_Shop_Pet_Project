@@ -21,7 +21,7 @@ namespace Online_Shop_Pet_Project
         private void InitializeUI()
         {
             this.Text = "Вход в Online Shop";
-            this.Size = new Size(500, 550); // Увеличили высоту для новых элементов
+            this.Size = new Size(500, 550);
             this.BackColor = Color.White;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -73,7 +73,6 @@ namespace Online_Shop_Pet_Project
                 PasswordChar = '*'
             };
 
-            // CheckBox для согласия с условиями
             termsCheckBox = new CheckBox
             {
                 Text = "Я согласен с условиями использования магазина",
@@ -83,7 +82,6 @@ namespace Online_Shop_Pet_Project
                 Checked = false
             };
 
-            // Ссылка на условия использования
             var termsLink = new LinkLabel
             {
                 Text = "ознакомиться",
@@ -208,22 +206,18 @@ namespace Online_Shop_Pet_Project
                 return;
             }
 
-            bool isEmployee = CheckIfUserIsEmployee(login, password);
+            var (success, isEmployee) = DBManager.AuthenticateUser(login, password);
 
-            var mainMenu = new MainMenuForm(isEmployee);
-            mainMenu.Show();
-            this.Hide();
-        }
-
-        private bool CheckIfUserIsEmployee(string login, string password)
-        {
-            if (login == "admin" && password == "admin")
-                return true;
-
-            if (login == "employee" && password == "123")
-                return true;
-
-            return false;
+            if (success)
+            {
+                var mainMenu = new MainMenuForm();
+                mainMenu.Show();
+                this.Hide();
+            }
+            else
+            {
+                MessageBox.Show("Неверный логин или пароль", "Ошибка входа", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void ShowRegistrationForm()
@@ -233,7 +227,7 @@ namespace Online_Shop_Pet_Project
                 if (registrationForm.ShowDialog() == DialogResult.OK)
                 {
                     bool isEmployee = registrationForm.IsEmployee;
-                    var mainMenu = new MainMenuForm(isEmployee);
+                    var mainMenu = new MainMenuForm();
                     mainMenu.Show();
                     this.Hide();
                 }

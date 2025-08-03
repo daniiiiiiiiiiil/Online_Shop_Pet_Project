@@ -24,6 +24,10 @@ namespace Online_Shop_Pet_Project
         private string employeePhotoPath = "";
         private string customerPhotoPath = "";
 
+        // Основные поля ввода
+        private TextBox contactTextBox;
+        private TextBox passwordTextBox;
+
         public RegistrationForm()
         {
             InitializeComponent();
@@ -32,15 +36,13 @@ namespace Online_Shop_Pet_Project
 
         private void InitializeUI()
         {
-            // Настройки формы
             this.Text = "Регистрация в Online Shop";
-            this.Size = new Size(520, 900); // Увеличили высоту для новых элементов
+            this.Size = new Size(520, 900);
             this.BackColor = Color.WhiteSmoke;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
-            // Градиентный фон (используем Panel с градиентом)
             var gradientPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -48,7 +50,6 @@ namespace Online_Shop_Pet_Project
             };
             this.Controls.Add(gradientPanel);
 
-            // Логотип - с более современным стилем
             var logo = new PictureBox
             {
                 SizeMode = PictureBoxSizeMode.Zoom,
@@ -58,7 +59,6 @@ namespace Online_Shop_Pet_Project
                 BorderStyle = BorderStyle.FixedSingle
             };
 
-            // Заголовок
             var title = new Label
             {
                 Text = "Регистрация в Online Shop",
@@ -68,7 +68,6 @@ namespace Online_Shop_Pet_Project
                 Location = new Point(80, 180)
             };
 
-            // Группа выбора типа регистрации
             var registrationTypeGroup = new Panel
             {
                 Location = new Point(50, 230),
@@ -77,7 +76,6 @@ namespace Online_Shop_Pet_Project
             };
             registrationTypeGroup.Paint += (s, e) =>
             {
-                // Обводка
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 e.Graphics.DrawRectangle(new Pen(Color.LightGray, 1), 0, 0, registrationTypeGroup.Width - 1, registrationTypeGroup.Height - 1);
             };
@@ -121,26 +119,22 @@ namespace Online_Shop_Pet_Project
             registrationTypeGroup.Controls.Add(employeeRadio);
             registrationTypeGroup.Controls.Add(customerRadio);
 
-            // Основные поля
             int labelX = 50;
             int inputX = 50;
             int currentY = 310;
             int verticalSpacing = 50;
 
-            // Email/Телефон
             var contactLabel = CreateLabel("Номер телефона / Email:", new Point(labelX, currentY));
-            var contactTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400);
+            contactTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400);
 
             currentY += verticalSpacing;
 
-            // Пароль
             var passwordLabel = CreateLabel("Пароль:", new Point(labelX, currentY));
-            var passwordTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400, true);
+            passwordTextBox = CreateTextBox(new Point(inputX, currentY + 25), 400, true);
 
             currentY += verticalSpacing;
 
-            // Поля для сотрудников
-            employeeDocumentsLabel = CreateLabel("Документы для присутствия:", new Point(labelX, currentY));
+            employeeDocumentsLabel = CreateLabel("Документы для подтверждения:", new Point(labelX, currentY));
             employeeDocumentsButton = CreateButton("Загрузить документы", new Point(inputX, currentY + 25));
             employeeDocumentsButton.Click += (s, e) =>
             {
@@ -166,7 +160,6 @@ namespace Online_Shop_Pet_Project
                 }
             };
 
-            // Для покупателей (по желанию)
             currentY += verticalSpacing;
             customerOptionalPhotoLabel = CreateLabel("Фото (по желанию):", new Point(labelX, currentY));
             customerOptionalPhotoButton = CreateButton("Загрузить фото", new Point(inputX, currentY + 25));
@@ -180,18 +173,16 @@ namespace Online_Shop_Pet_Project
                 }
             };
 
-            // CheckBox для согласия с условиями
             currentY += verticalSpacing;
             var termsCheckBox = new CheckBox
             {
                 Text = "Я согласен с условиями использования магазина",
                 Font = new Font("Segoe UI", 10),
                 AutoSize = true,
-                Location = new Point(labelX+5, currentY+10),
+                Location = new Point(labelX + 5, currentY + 10),
                 Checked = false
             };
 
-            // Ссылка на условия использования
             var termsLink = new LinkLabel
             {
                 Text = "ознакомиться",
@@ -204,9 +195,8 @@ namespace Online_Shop_Pet_Project
             };
             termsLink.Click += (s, e) => ShowTermsDialog();
 
-            currentY += 30; // Отступ после CheckBox
+            currentY += 30;
 
-            // Кнопка регистрации
             var registerButton = new Button
             {
                 Text = "Зарегистрироваться",
@@ -233,7 +223,6 @@ namespace Online_Shop_Pet_Project
                 ProcessRegistration();
             };
 
-            // Текст с ссылкой на вход
             var loginPrompt = new Label
             {
                 Text = "Уже есть аккаунт? ",
@@ -259,7 +248,6 @@ namespace Online_Shop_Pet_Project
                 this.Close();
             };
 
-            // Добавляем все элементы на главный контейнер
             gradientPanel.Controls.Add(logo);
             gradientPanel.Controls.Add(title);
             gradientPanel.Controls.Add(registrationTypeGroup);
@@ -279,7 +267,6 @@ namespace Online_Shop_Pet_Project
             gradientPanel.Controls.Add(loginPrompt);
             gradientPanel.Controls.Add(loginLink);
 
-            // Изначально скрываем поля для сотрудников
             ToggleRegistrationFields();
         }
 
@@ -405,15 +392,61 @@ namespace Online_Shop_Pet_Project
 
         private void ProcessRegistration()
         {
-            IsEmployee = isEmployeeRegistration;
-            MessageBox.Show(
-                IsEmployee ? "Регистрация сотрудника выполнена" : "Регистрация покупателя выполнена",
-                "Успех",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            string contact = contactTextBox.Text.Trim();
+            string password = passwordTextBox.Text;
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            if (string.IsNullOrWhiteSpace(contact) || string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("Пожалуйста, заполните все обязательные поля", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (isEmployeeRegistration)
+            {
+                if (string.IsNullOrWhiteSpace(employeeDocumentsPath) || string.IsNullOrWhiteSpace(employeePhotoPath))
+                {
+                    MessageBox.Show("Для регистрации сотрудника необходимо загрузить документы и фото", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            bool isEmail = contact.Contains("@");
+            string username = isEmail ? contact.Split('@')[0] : contact;
+            string email = isEmail ? contact : null;
+            string phone = isEmail ? null : contact;
+
+            if (DBManager.UserExists(username, email))
+            {
+                MessageBox.Show("Пользователь с такими данными уже существует", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            bool success;
+            if (isEmployeeRegistration)
+            {
+                success = DBManager.RegisterUser(username, email, phone, password, true, employeeDocumentsPath, employeePhotoPath);
+            }
+            else
+            {
+                success = DBManager.RegisterUser(username, email, phone, password, false, null, string.IsNullOrEmpty(customerPhotoPath) ? null : customerPhotoPath);
+            }
+
+            if (success)
+            {
+                IsEmployee = isEmployeeRegistration;
+                MessageBox.Show(
+                    IsEmployee ? "Регистрация сотрудника выполнена успешно!" : "Регистрация покупателя выполнена успешно!",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Ошибка при регистрации. Пожалуйста, попробуйте снова.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

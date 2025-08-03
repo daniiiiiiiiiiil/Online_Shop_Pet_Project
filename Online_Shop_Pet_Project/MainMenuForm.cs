@@ -13,8 +13,7 @@ namespace Online_Shop_Pet_Project
     {
         public bool isEmployee;
         public string userRole;
-
-        // Панели интерфейса
+        private DatabaseHelper dbHelper;
         public Panel productsPanel, productDetailsPanel, ordersPanel, cartPanel, deliveryPanel, profilePanel,
             deliveriesPanel, routePanel, earningsPanel, cookOrdersPanel, cookMenuPanel, ingredientsPanel,
             hallStaffOrdersPanel, storeMapPanel, hallStaffHistoryPanel, helpPanel, ticketsPanel, historyPanel,
@@ -36,7 +35,6 @@ namespace Online_Shop_Pet_Project
             PhotoPath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\Person.png"
         };
 
-        // Хелпер-классы
         public ProductHelper ProductHelper;
         public OrderHelper OrderHelper;
         public CartHelper CartHelper;
@@ -49,13 +47,26 @@ namespace Online_Shop_Pet_Project
         public HallStaffHelper HallStaffHelper;
         public SellerHelper SellerHelper;
 
-        public MainMenuForm(bool isEmployee)
+        public MainMenuForm()
         {
             InitializeComponent();
-            this.isEmployee = isEmployee;
+            dbHelper = new DatabaseHelper();
+
+            products = new List<Product>();
+            orders = new List<Order>();
+            currentOrder = new Order { Items = new List<OrderItem>() };
+
+            ProductHelper = new ProductHelper(this);
+            ProductHelper.InitializeProducts();
+
+            CartHelper = new CartHelper(this);
+            CartHelper.LoadCart(); 
+
+            OrderHelper = new OrderHelper(this);
+            OrderHelper.InitializeOrders();
+
             this.WindowState = FormWindowState.Maximized;
 
-            // Инициализация хелпер-классов
             ProductHelper = new ProductHelper(this);
             OrderHelper = new OrderHelper(this);
             CartHelper = new CartHelper(this);
@@ -68,7 +79,6 @@ namespace Online_Shop_Pet_Project
             HallStaffHelper = new HallStaffHelper(this);
             SellerHelper = new SellerHelper(this);
 
-            // Инициализация данных
             ProductHelper.InitializeProducts();
             OrderHelper.InitializeOrders();
             UIHelper.InitializeUI();
