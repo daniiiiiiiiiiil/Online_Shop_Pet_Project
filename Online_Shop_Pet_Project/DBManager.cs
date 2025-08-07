@@ -114,7 +114,81 @@ namespace Online_Shop_Pet_Project
                 return (false, false);
             }
         }
+        public static UserProfile LoadUserProfile(string username)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
 
+                    string query = @"
+                SELECT Username, Email, Phone, PhotoPath, IsEmployee 
+                FROM Users 
+                WHERE Username = @username";
+
+                    using (var command = new SQLiteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@username", username);
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new UserProfile
+                                {
+                                    Name = reader["Username"].ToString(),
+                                    Email = reader["Email"]?.ToString(),
+                                    Phone = reader["Phone"]?.ToString(),
+                                    PhotoPath = reader["PhotoPath"]?.ToString() ?? "default_profile.png",
+                                    Password = "********",
+                                    IsEmployee = Convert.ToBoolean(reader["IsEmployee"])
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки профиля: {ex.Message}");
+            }
+
+            return new UserProfile
+            {
+                Name = username,
+                Email = "",
+                Phone = "",
+                PhotoPath = "default_profile.png",
+                Password = "********",
+                IsEmployee = false
+            };
+        }
+        public static string GetUsernameByLogin(string login)
+        {
+            try
+            {
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string query = "SELECT Username FROM Users WHERE Username = @login OR Email = @login";
+
+                    using (var command = new SQLiteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@login", login);
+
+                        object result = command.ExecuteScalar();
+                        return result?.ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка получения имени пользователя: {ex.Message}");
+                return null;
+            }
+        }
         public static bool UserExists(string username, string email)
         {
             try

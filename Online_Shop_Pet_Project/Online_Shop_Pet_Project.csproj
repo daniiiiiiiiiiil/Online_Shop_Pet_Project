@@ -86,11 +86,14 @@
     <Compile Include="ChatTicket.cs" />
     <Compile Include="Complaint.cs" />
     <Compile Include="CookHelper.cs" />
+    <Compile Include="CurrentUser.cs" />
     <Compile Include="DatabaseHelper.cs" />
     <Compile Include="DBManager.cs" />
     <Compile Include="Delivery.cs" />
     <Compile Include="DeliveryHelper.cs" />
+    <Compile Include="DirectorHelper.cs" />
     <Compile Include="EmployeeHelper.cs" />
+    <Compile Include="EmployeeItem.cs" />
     <Compile Include="FaqQuestion.cs" />
     <Compile Include="FaqSection.cs" />
     <Compile Include="HallOrder.cs" />

@@ -50,23 +50,8 @@ namespace Online_Shop_Pet_Project
         public MainMenuForm()
         {
             InitializeComponent();
+
             dbHelper = new DatabaseHelper();
-
-            products = new List<Product>();
-            orders = new List<Order>();
-            currentOrder = new Order { Items = new List<OrderItem>() };
-
-            ProductHelper = new ProductHelper(this);
-            ProductHelper.InitializeProducts();
-
-            CartHelper = new CartHelper(this);
-            CartHelper.LoadCart(); 
-
-            OrderHelper = new OrderHelper(this);
-            OrderHelper.InitializeOrders();
-
-            this.WindowState = FormWindowState.Maximized;
-
             ProductHelper = new ProductHelper(this);
             OrderHelper = new OrderHelper(this);
             CartHelper = new CartHelper(this);
@@ -74,21 +59,28 @@ namespace Online_Shop_Pet_Project
             ProfileHelper = new ProfileHelper(this);
             EmployeeHelper = new EmployeeHelper(this);
             SupportHelper = new SupportHelper(this);
-            UIHelper = new UIHelper(this);
+            UIHelper = new UIHelper(this);  
             CookHelper = new CookHelper(this);
             HallStaffHelper = new HallStaffHelper(this);
             SellerHelper = new SellerHelper(this);
 
+            products = new List<Product>();
+            orders = new List<Order>();
+            currentOrder = new Order { Items = new List<OrderItem>() };
+
             ProductHelper.InitializeProducts();
+            CartHelper.LoadCart();
             OrderHelper.InitializeOrders();
-            UIHelper.InitializeUI();
+
+            this.WindowState = FormWindowState.Maximized;
+            UIHelper.InitializeUI();  
         }
 
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
-            if (isEmployee)
+            if (CurrentUser.IsEmployee)
             {
                 EmployeeHelper.ShowEmployeeRoleSelection();
             }
@@ -97,6 +89,11 @@ namespace Online_Shop_Pet_Project
                 UIHelper.ShowCustomerMenu();
                 ProductHelper.ShowProductsPanel();
             }
+        }
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            CurrentUser.Clear(); 
         }
     }
 }

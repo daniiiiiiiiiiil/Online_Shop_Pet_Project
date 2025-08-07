@@ -13,5 +13,6 @@ namespace Online_Shop_Pet_Project
         public string Email { get; set; }
         public string Password { get; set; }
         public string PhotoPath { get; set; }
+        public bool IsEmployee { get; set; }
     }
 }

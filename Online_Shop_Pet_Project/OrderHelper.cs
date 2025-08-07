@@ -290,7 +290,7 @@ namespace Online_Shop_Pet_Project
                 var itemPanel = new Panel
                 {
                     Size = new Size(550, 100),
-                    Margin = new Padding(0, 0, 0, 10), // Отступ снизу
+                    Margin = new Padding(0, 0, 0, 10), 
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.White
                 };
@@ -361,10 +361,9 @@ namespace Online_Shop_Pet_Project
             detailsForm.Controls.Add(totalPanel);
             detailsForm.Controls.Add(headerPanel);
 
-            // Автоматически подбираем размер формы
             int totalHeight = headerPanel.Height + totalPanel.Height;
-            int itemsHeight = order.Items.Count * 110; // 100 высота панели + 10 отступ
-            int maxHeight = Math.Min(800, totalHeight + itemsHeight + 40); // 40 - дополнительные отступы
+            int itemsHeight = order.Items.Count * 110; 
+            int maxHeight = Math.Min(800, totalHeight + itemsHeight + 40); 
 
             detailsForm.Height = maxHeight;
             detailsForm.StartPosition = FormStartPosition.CenterParent;

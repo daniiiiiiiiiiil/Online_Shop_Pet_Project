@@ -434,6 +434,11 @@ namespace Online_Shop_Pet_Project
             if (success)
             {
                 IsEmployee = isEmployeeRegistration;
+
+                // Сохраняем данные текущего пользователя
+                CurrentUser.Username = username;
+                CurrentUser.IsEmployee = isEmployeeRegistration;
+
                 MessageBox.Show(
                     IsEmployee ? "Регистрация сотрудника выполнена успешно!" : "Регистрация покупателя выполнена успешно!",
                     "Успех",

@@ -210,6 +210,16 @@ namespace Online_Shop_Pet_Project
 
             if (success)
             {
+                string username = DBManager.GetUsernameByLogin(login);
+                if (string.IsNullOrEmpty(username))
+                {
+                    MessageBox.Show("Ошибка получения данных пользователя", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                CurrentUser.Username = username;
+                CurrentUser.IsEmployee = isEmployee;
+
                 var mainMenu = new MainMenuForm();
                 mainMenu.Show();
                 this.Hide();
@@ -219,7 +229,6 @@ namespace Online_Shop_Pet_Project
                 MessageBox.Show("Неверный логин или пароль", "Ошибка входа", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private void ShowRegistrationForm()
         {
             using (var registrationForm = new RegistrationForm())
