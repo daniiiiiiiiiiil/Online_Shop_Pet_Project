@@ -3,48 +3,225 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Linq;
+using System.Data.SQLite;
+using System.IO;
 
 namespace Online_Shop_Pet_Project
 {
     public class CookHelper
     {
         private MainMenuForm form;
-        private List<KitchenOrder> orderHistory = new List<KitchenOrder>();
-        private List<IngredientRequest> ingredientRequests = new List<IngredientRequest>();
+        private SQLiteConnection connection;
+        private string dbPath = "RestaurantDB.sqlite";
 
         public CookHelper(MainMenuForm form)
         {
             this.form = form;
+            InitializeDatabase();
             InitializeSampleData();
+        }
+
+        private void InitializeDatabase()
+        {
+            bool dbExists = File.Exists(dbPath);
+
+            connection = new SQLiteConnection($"Data Source={dbPath};Version=3;");
+            connection.Open();
+
+            if (!dbExists)
+            {
+                CreateDatabaseTables();
+            }
+        }
+
+        private void CreateDatabaseTables()
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = @"CREATE TABLE KitchenOrders (
+                                    Id INTEGER PRIMARY KEY,
+                                    TableNumber INTEGER NOT NULL,
+                                    Items TEXT NOT NULL,
+                                    Status TEXT NOT NULL,
+                                    Time DATETIME NOT NULL)";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"CREATE TABLE OrderStatusHistory (
+                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    OrderId INTEGER NOT NULL,
+                                    Status TEXT NOT NULL,
+                                    Time DATETIME NOT NULL,
+                                    FOREIGN KEY(OrderId) REFERENCES KitchenOrders(Id))";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"CREATE TABLE MenuItems (
+                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    Name TEXT NOT NULL,
+                                    Price INTEGER NOT NULL,
+                                    Ingredients TEXT NOT NULL,
+                                    CookingTime INTEGER NOT NULL)";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"CREATE TABLE IngredientRequirements (
+                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    MenuItemId INTEGER NOT NULL,
+                                    Name TEXT NOT NULL,
+                                    Quantity REAL NOT NULL,
+                                    Unit TEXT NOT NULL,
+                                    FOREIGN KEY(MenuItemId) REFERENCES MenuItems(Id))";
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = @"CREATE TABLE IngredientRequests (
+                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    IngredientName TEXT NOT NULL,
+                                    Quantity REAL NOT NULL,
+                                    Unit TEXT NOT NULL,
+                                    Comment TEXT,
+                                    RequestTime DATETIME NOT NULL,
+                                    Status TEXT NOT NULL)";
+                cmd.ExecuteNonQuery();
+            }
         }
 
         private void InitializeSampleData()
         {
-            orderHistory.Add(new KitchenOrder
+            if (GetOrdersCount() == 0)
             {
-                Id = 1001,
-                TableNumber = 5,
-                Items = "Пицца Маргарита, Салат Цезарь",
-                Status = "Поступил",
-                Time = DateTime.Now.AddMinutes(-15),
-                StatusHistory = new List<StatusChange>
-                {
-                    new StatusChange { Status = "Поступил", Time = DateTime.Now.AddMinutes(-15) }
-                }
-            });
+                AddSampleOrders();
+            }
 
-            orderHistory.Add(new KitchenOrder
+            if (GetMenuItemsCount() == 0)
             {
-                Id = 1002,
-                TableNumber = 3,
-                Items = "Стейк средней прожарки",
-                Status = "Поступил",
-                Time = DateTime.Now.AddMinutes(-5),
-                StatusHistory = new List<StatusChange>
+                AddSampleMenu();
+            }
+        }
+
+        private int GetOrdersCount()
+        {
+            using (var cmd = new SQLiteCommand("SELECT COUNT(*) FROM KitchenOrders", connection))
+            {
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private int GetMenuItemsCount()
+        {
+            using (var cmd = new SQLiteCommand("SELECT COUNT(*) FROM MenuItems", connection))
+            {
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private void AddSampleOrders()
+        {
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
                 {
-                    new StatusChange { Status = "Поступил", Time = DateTime.Now.AddMinutes(-5) }
+                    AddOrder(1001, 5, "Пицца Маргарита, Салат Цезарь", "Поступил", DateTime.Now.AddMinutes(-15));
+                    AddStatusHistory(1001, "Поступил", DateTime.Now.AddMinutes(-15));
+
+                    AddOrder(1002, 3, "Стейк средней прожарки", "Поступил", DateTime.Now.AddMinutes(-5));
+                    AddStatusHistory(1002, "Поступил", DateTime.Now.AddMinutes(-5));
+
+                    transaction.Commit();
                 }
-            });
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        private void AddOrder(int id, int tableNumber, string items, string status, DateTime time)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = @"INSERT INTO KitchenOrders (Id, TableNumber, Items, Status, Time)
+                                  VALUES (@id, @tableNumber, @items, @status, @time)";
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@tableNumber", tableNumber);
+                cmd.Parameters.AddWithValue("@items", items);
+                cmd.Parameters.AddWithValue("@status", status);
+                cmd.Parameters.AddWithValue("@time", time);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void AddStatusHistory(int orderId, string status, DateTime time)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = @"INSERT INTO OrderStatusHistory (OrderId, Status, Time)
+                                  VALUES (@orderId, @status, @time)";
+                cmd.Parameters.AddWithValue("@orderId", orderId);
+                cmd.Parameters.AddWithValue("@status", status);
+                cmd.Parameters.AddWithValue("@time", time);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void AddSampleMenu()
+        {
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    int pizzaId = AddMenuItem("Пицца Маргарита", 599, "Тесто, томатный соус, моцарелла, базилик", 15);
+                    AddIngredientRequirement(pizzaId, "Тесто", 0.3, "кг");
+                    AddIngredientRequirement(pizzaId, "Томатный соус", 0.1, "л");
+                    AddIngredientRequirement(pizzaId, "Моцарелла", 0.2, "кг");
+                    AddIngredientRequirement(pizzaId, "Базилик", 0.01, "кг");
+
+                    int steakId = AddMenuItem("Стейк", 1299, "Говядина, специи, соус", 20);
+                    AddIngredientRequirement(steakId, "Говядина", 0.3, "кг");
+                    AddIngredientRequirement(steakId, "Специи", 0.01, "кг");
+                    AddIngredientRequirement(steakId, "Стейк соус", 0.05, "л");
+
+                    int saladId = AddMenuItem("Салат Цезарь", 399, "Курица, салат, сухарики, соус", 10);
+                    AddIngredientRequirement(saladId, "Курица", 0.15, "кг");
+                    AddIngredientRequirement(saladId, "Салат", 0.1, "кг");
+                    AddIngredientRequirement(saladId, "Сухарики", 0.03, "кг");
+                    AddIngredientRequirement(saladId, "Соус Цезарь", 0.05, "л");
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        private int AddMenuItem(string name, int price, string ingredients, int cookingTime)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = @"INSERT INTO MenuItems (Name, Price, Ingredients, CookingTime)
+                                  VALUES (@name, @price, @ingredients, @cookingTime);
+                                  SELECT last_insert_rowid();";
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@price", price);
+                cmd.Parameters.AddWithValue("@ingredients", ingredients);
+                cmd.Parameters.AddWithValue("@cookingTime", cookingTime);
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private void AddIngredientRequirement(int menuItemId, string name, double quantity, string unit)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = @"INSERT INTO IngredientRequirements (MenuItemId, Name, Quantity, Unit)
+                                  VALUES (@menuItemId, @name, @quantity, @unit)";
+                cmd.Parameters.AddWithValue("@menuItemId", menuItemId);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@quantity", quantity);
+                cmd.Parameters.AddWithValue("@unit", unit);
+                cmd.ExecuteNonQuery();
+            }
         }
 
         public void ShowCookOrders()
@@ -69,7 +246,7 @@ namespace Online_Shop_Pet_Project
             };
             form.cookOrdersPanel.Controls.Add(title);
 
-            var activeOrders = orderHistory.Where(o => o.Status != "Готово" && o.Status != "Отменено").ToList();
+            var activeOrders = GetActiveOrders();
 
             int yPos = 60;
             foreach (var order in activeOrders)
@@ -93,6 +270,58 @@ namespace Online_Shop_Pet_Project
             form.cookOrdersPanel.Controls.Add(historyButton);
 
             form.Controls.Add(form.cookOrdersPanel);
+        }
+
+        private List<KitchenOrder> GetActiveOrders()
+        {
+            var orders = new List<KitchenOrder>();
+
+            using (var cmd = new SQLiteCommand(
+                "SELECT * FROM KitchenOrders WHERE Status NOT IN ('Готово', 'Отменено')", connection))
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var order = new KitchenOrder
+                        {
+                            Id = Convert.ToInt32(reader["Id"]),
+                            TableNumber = Convert.ToInt32(reader["TableNumber"]),
+                            Items = reader["Items"].ToString(),
+                            Status = reader["Status"].ToString(),
+                            Time = Convert.ToDateTime(reader["Time"]),
+                            StatusHistory = GetOrderStatusHistory(Convert.ToInt32(reader["Id"]))
+                        };
+                        orders.Add(order);
+                    }
+                }
+            }
+
+            return orders;
+        }
+
+        private List<StatusChange> GetOrderStatusHistory(int orderId)
+        {
+            var history = new List<StatusChange>();
+
+            using (var cmd = new SQLiteCommand(
+                "SELECT * FROM OrderStatusHistory WHERE OrderId = @orderId ORDER BY Time", connection))
+            {
+                cmd.Parameters.AddWithValue("@orderId", orderId);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        history.Add(new StatusChange
+                        {
+                            Status = reader["Status"].ToString(),
+                            Time = Convert.ToDateTime(reader["Time"])
+                        });
+                    }
+                }
+            }
+
+            return history;
         }
 
         private Panel CreateOrderPanel(KitchenOrder order, ref int yPos)
@@ -181,9 +410,7 @@ namespace Online_Shop_Pet_Project
             };
             form.orderHistoryPanel.Controls.Add(title);
 
-            var completedOrders = orderHistory.Where(o => o.Status == "Готово" || o.Status == "Отменено")
-                                             .OrderByDescending(o => o.Time)
-                                             .ToList();
+            var completedOrders = GetCompletedOrders();
 
             int yPos = 60;
             foreach (var order in completedOrders)
@@ -262,6 +489,34 @@ namespace Online_Shop_Pet_Project
             form.Controls.Add(form.orderHistoryPanel);
         }
 
+        private List<KitchenOrder> GetCompletedOrders()
+        {
+            var orders = new List<KitchenOrder>();
+
+            using (var cmd = new SQLiteCommand(
+                "SELECT * FROM KitchenOrders WHERE Status IN ('Готово', 'Отменено') ORDER BY Time DESC", connection))
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var order = new KitchenOrder
+                        {
+                            Id = Convert.ToInt32(reader["Id"]),
+                            TableNumber = Convert.ToInt32(reader["TableNumber"]),
+                            Items = reader["Items"].ToString(),
+                            Status = reader["Status"].ToString(),
+                            Time = Convert.ToDateTime(reader["Time"]),
+                            StatusHistory = GetOrderStatusHistory(Convert.ToInt32(reader["Id"]))
+                        };
+                        orders.Add(order);
+                    }
+                }
+            }
+
+            return orders;
+        }
+
         public void ShowCookMenu()
         {
             form.UIHelper.ClearPanels();
@@ -284,50 +539,7 @@ namespace Online_Shop_Pet_Project
             };
             form.cookMenuPanel.Controls.Add(title);
 
-            var menuItems = new List<MenuItem>
-            {
-                new MenuItem
-                {
-                    Name = "Пицца Маргарита",
-                    Price = 599,
-                    Ingredients = "Тесто, томатный соус, моцарелла, базилик",
-                    CookingTime = 15,
-                    RequiredIngredients = new List<IngredientRequirement>
-                    {
-                        new IngredientRequirement { Name = "Тесто", Quantity = 0.3, Unit = "кг" },
-                        new IngredientRequirement { Name = "Томатный соус", Quantity = 0.1, Unit = "л" },
-                        new IngredientRequirement { Name = "Моцарелла", Quantity = 0.2, Unit = "кг" },
-                        new IngredientRequirement { Name = "Базилик", Quantity = 0.01, Unit = "кг" }
-                    }
-                },
-                new MenuItem
-                {
-                    Name = "Стейк",
-                    Price = 1299,
-                    Ingredients = "Говядина, специи, соус",
-                    CookingTime = 20,
-                    RequiredIngredients = new List<IngredientRequirement>
-                    {
-                        new IngredientRequirement { Name = "Говядина", Quantity = 0.3, Unit = "кг" },
-                        new IngredientRequirement { Name = "Специи", Quantity = 0.01, Unit = "кг" },
-                        new IngredientRequirement { Name = "Стейк соус", Quantity = 0.05, Unit = "л" }
-                    }
-                },
-                new MenuItem
-                {
-                    Name = "Салат Цезарь",
-                    Price = 399,
-                    Ingredients = "Курица, салат, сухарики, соус",
-                    CookingTime = 10,
-                    RequiredIngredients = new List<IngredientRequirement>
-                    {
-                        new IngredientRequirement { Name = "Курица", Quantity = 0.15, Unit = "кг" },
-                        new IngredientRequirement { Name = "Салат", Quantity = 0.1, Unit = "кг" },
-                        new IngredientRequirement { Name = "Сухарики", Quantity = 0.03, Unit = "кг" },
-                        new IngredientRequirement { Name = "Соус Цезарь", Quantity = 0.05, Unit = "л" }
-                    }
-                }
-            };
+            var menuItems = GetMenuItems();
 
             int yPos = 60;
             foreach (var item in menuItems)
@@ -377,10 +589,11 @@ namespace Online_Shop_Pet_Project
                 };
                 itemPanel.Controls.Add(requirementsLabel);
 
-                string requirements = string.Join(", ", item.RequiredIngredients.Select(i => $"{i.Name} - {i.Quantity}{i.Unit}"));
+                var requirements = GetIngredientRequirements(item.Id);
+                string requirementsText = string.Join(", ", requirements.Select(i => $"{i.Name} - {i.Quantity}{i.Unit}"));
                 var requirementsList = new Label
                 {
-                    Text = requirements,
+                    Text = requirementsText,
                     Font = new Font("Segoe UI", 8),
                     Location = new Point(20, 110),
                     AutoSize = false,
@@ -393,6 +606,139 @@ namespace Online_Shop_Pet_Project
             }
 
             form.Controls.Add(form.cookMenuPanel);
+        }
+
+        private List<MenuItem> GetMenuItems()
+        {
+            var menuItems = new List<MenuItem>();
+
+            using (var cmd = new SQLiteCommand("SELECT * FROM MenuItems", connection))
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        menuItems.Add(new MenuItem
+                        {
+                            Id = Convert.ToInt32(reader["Id"]),
+                            Name = reader["Name"].ToString(),
+                            Price = Convert.ToInt32(reader["Price"]),
+                            Ingredients = reader["Ingredients"].ToString(),
+                            CookingTime = Convert.ToInt32(reader["CookingTime"])
+                        });
+                    }
+                }
+            }
+
+            return menuItems;
+        }
+
+        private List<IngredientRequirement> GetIngredientRequirements(int menuItemId)
+        {
+            var requirements = new List<IngredientRequirement>();
+
+            using (var cmd = new SQLiteCommand(
+                "SELECT * FROM IngredientRequirements WHERE MenuItemId = @menuItemId", connection))
+            {
+                cmd.Parameters.AddWithValue("@menuItemId", menuItemId);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        requirements.Add(new IngredientRequirement
+                        {
+                            Name = reader["Name"].ToString(),
+                            Quantity = Convert.ToDouble(reader["Quantity"]),
+                            Unit = reader["Unit"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return requirements;
+        }
+
+        public void ChangeOrderStatus(int orderId)
+        {
+            using (var cmd = new SQLiteCommand(
+                "SELECT * FROM KitchenOrders WHERE Id = @orderId", connection))
+            {
+                cmd.Parameters.AddWithValue("@orderId", orderId);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (!reader.Read()) return;
+
+                    var form = new Form
+                    {
+                        Text = $"Изменение статуса заказа #{orderId}",
+                        Size = new Size(300, 200),
+                        StartPosition = FormStartPosition.CenterParent,
+                        FormBorderStyle = FormBorderStyle.FixedDialog,
+                        MaximizeBox = false
+                    };
+
+                    var statusLabel = new Label
+                    {
+                        Text = "Выберите новый статус:",
+                        Location = new Point(20, 20),
+                        AutoSize = true
+                    };
+
+                    var statusComboBox = new ComboBox
+                    {
+                        Location = new Point(20, 50),
+                        Size = new Size(250, 20)
+                    };
+
+                    string currentStatus = reader["Status"].ToString();
+                    if (currentStatus == "Поступил")
+                    {
+                        statusComboBox.Items.AddRange(new[] { "Принят", "Готовится", "Отменено" });
+                    }
+                    else if (currentStatus == "Принят")
+                    {
+                        statusComboBox.Items.AddRange(new[] { "Готовится", "Готово", "Отменено" });
+                    }
+                    else if (currentStatus == "Готовится")
+                    {
+                        statusComboBox.Items.AddRange(new[] { "Готово", "Отменено" });
+                    }
+
+                    statusComboBox.SelectedIndex = 0;
+
+                    var saveButton = new Button
+                    {
+                        Text = "Сохранить",
+                        BackColor = Color.FromArgb(70, 130, 180),
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(100, 30),
+                        Location = new Point(100, 100),
+                        DialogResult = DialogResult.OK
+                    };
+                    saveButton.Click += (s, e) =>
+                    {
+                        string newStatus = statusComboBox.Text;
+
+                        using (var updateCmd = new SQLiteCommand(connection))
+                        {
+                            updateCmd.CommandText = "UPDATE KitchenOrders SET Status = @status WHERE Id = @orderId";
+                            updateCmd.Parameters.AddWithValue("@status", newStatus);
+                            updateCmd.Parameters.AddWithValue("@orderId", orderId);
+                            updateCmd.ExecuteNonQuery();
+                        }
+
+                        AddStatusHistory(orderId, newStatus, DateTime.Now);
+
+                        MessageBox.Show($"Статус заказа #{orderId} изменен на: {newStatus}", "Статус изменен");
+                        form.Close();
+                        ShowCookOrders();
+                    };
+
+                    form.Controls.AddRange(new Control[] { statusLabel, statusComboBox, saveButton });
+                    form.ShowDialog();
+                }
+            }
         }
 
         public void ShowIngredients()
@@ -490,7 +836,32 @@ namespace Online_Shop_Pet_Project
 
             form.Controls.Add(form.ingredientsPanel);
         }
+        private List<IngredientRequest> GetIngredientRequests()
+        {
+            var requests = new List<IngredientRequest>();
 
+            using (var cmd = new SQLiteCommand("SELECT * FROM IngredientRequests", connection))
+            {
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        requests.Add(new IngredientRequest
+                        {
+                            Id = Convert.ToInt32(reader["Id"]),
+                            IngredientName = reader["IngredientName"].ToString(),
+                            Quantity = Convert.ToDouble(reader["Quantity"]),
+                            Unit = reader["Unit"].ToString(),
+                            Comment = reader["Comment"]?.ToString(),
+                            RequestTime = Convert.ToDateTime(reader["RequestTime"]),
+                            Status = reader["Status"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return requests;
+        }
         public void ShowIngredientRequestHistory()
         {
             form.UIHelper.ClearPanels();
@@ -513,8 +884,10 @@ namespace Online_Shop_Pet_Project
             };
             form.ingredientHistoryPanel.Controls.Add(title);
 
+            var requests = GetIngredientRequests();
+
             int yPos = 60;
-            foreach (var request in ingredientRequests.OrderByDescending(r => r.RequestTime))
+            foreach (var request in requests.OrderByDescending(r => r.RequestTime))
             {
                 var requestPanel = new Panel
                 {
@@ -625,72 +998,7 @@ namespace Online_Shop_Pet_Project
             form.Controls.AddRange(new Control[] { statusLabel, statusComboBox, saveButton });
             form.ShowDialog();
         }
-        public void ChangeOrderStatus(int orderId)
-        {
-            var order = orderHistory.FirstOrDefault(o => o.Id == orderId);
-            if (order == null) return;
 
-            var form = new Form
-            {
-                Text = $"Изменение статуса заказа #{orderId}",
-                Size = new Size(300, 200),
-                StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MaximizeBox = false
-            };
-
-            var statusLabel = new Label
-            {
-                Text = "Выберите новый статус:",
-                Location = new Point(20, 20),
-                AutoSize = true
-            };
-
-            var statusComboBox = new ComboBox
-            {
-                Location = new Point(20, 50),
-                Size = new Size(250, 20)
-            };
-
-            if (order.Status == "Поступил")
-            {
-                statusComboBox.Items.AddRange(new[] { "Принят", "Готовится", "Отменено" });
-            }
-            else if (order.Status == "Принят")
-            {
-                statusComboBox.Items.AddRange(new[] { "Готовится", "Готово", "Отменено" });
-            }
-            else if (order.Status == "Готовится")
-            {
-                statusComboBox.Items.AddRange(new[] { "Готово", "Отменено" });
-            }
-
-            statusComboBox.SelectedIndex = 0;
-
-            var saveButton = new Button
-            {
-                Text = "Сохранить",
-                BackColor = Color.FromArgb(70, 130, 180),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(100, 30),
-                Location = new Point(100, 100),
-                DialogResult = DialogResult.OK
-            };
-            saveButton.Click += (s, e) =>
-            {
-                string newStatus = statusComboBox.Text;
-                order.Status = newStatus;
-                order.StatusHistory.Add(new StatusChange { Status = newStatus, Time = DateTime.Now });
-
-                MessageBox.Show($"Статус заказа #{orderId} изменен на: {newStatus}", "Статус изменен");
-                form.Close();
-                ShowCookOrders();
-            };
-
-            form.Controls.AddRange(new Control[] { statusLabel, statusComboBox, saveButton });
-            form.ShowDialog();
-        }
 
         public void RequestIngredient(string ingredientName)
         {
@@ -762,17 +1070,18 @@ namespace Online_Shop_Pet_Project
             };
             saveButton.Click += (s, e) =>
             {
-                var request = new IngredientRequest
+                using (var cmd = new SQLiteCommand(connection))
                 {
-                    IngredientName = ingredientName,
-                    Quantity = (double)quantityBox.Value,
-                    Unit = unitComboBox.Text,
-                    Comment = commentBox.Text,
-                    RequestTime = DateTime.Now,
-                    Status = "В обработке"
-                };
-
-                ingredientRequests.Add(request);
+                    cmd.CommandText = @"INSERT INTO IngredientRequests 
+                                      (IngredientName, Quantity, Unit, Comment, RequestTime, Status)
+                                      VALUES (@name, @quantity, @unit, @comment, @time, 'В обработке')";
+                    cmd.Parameters.AddWithValue("@name", ingredientName);
+                    cmd.Parameters.AddWithValue("@quantity", (double)quantityBox.Value);
+                    cmd.Parameters.AddWithValue("@unit", unitComboBox.Text);
+                    cmd.Parameters.AddWithValue("@comment", commentBox.Text);
+                    cmd.Parameters.AddWithValue("@time", DateTime.Now);
+                    cmd.ExecuteNonQuery();
+                }
 
                 MessageBox.Show($"Запрос на {quantityBox.Value} {unitComboBox.Text} {ingredientName} отправлен", "Запрос отправлен");
                 form.Close();
@@ -789,3 +1098,4 @@ namespace Online_Shop_Pet_Project
         }
     }
 }
+

@@ -8,6 +8,7 @@ namespace Online_Shop_Pet_Project
 {
     public class IngredientRequest
     {
+        public int Id { get; set; }
         public string IngredientName { get; set; }
         public double Quantity { get; set; }
         public string Unit { get; set; }
