@@ -16,6 +16,10 @@ namespace Online_Shop_Pet_Project
             InitializeDatabase();
         }
 
+        public string GetConnectionString()
+        {
+            return connectionString;
+        }
         private void InitializeDatabase()
         {
             if (!File.Exists(databasePath))
