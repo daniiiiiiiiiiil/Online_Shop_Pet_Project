@@ -26,7 +26,6 @@ namespace Online_Shop_Pet_Project
             connection = new SQLiteConnection($"Data Source={dbPath};Version=3;");
             connection.Open();
 
-            // Create tables if they don't exist
             using (var cmd = new SQLiteCommand(connection))
             {
                 cmd.CommandText = @"
@@ -80,7 +79,6 @@ namespace Online_Shop_Pet_Project
                 cmd.ExecuteNonQuery();
             }
 
-            // Добавляем примеры товаров, если таблица пуста
             using (var cmd = new SQLiteCommand("SELECT COUNT(*) FROM Products", connection))
             {
                 int count = Convert.ToInt32(cmd.ExecuteScalar());
@@ -115,7 +113,6 @@ namespace Online_Shop_Pet_Project
                 }
             }
 
-            // Load products from database
             LoadProducts();
         }
 
@@ -214,7 +211,6 @@ namespace Online_Shop_Pet_Project
                 SelectionMode = SelectionMode.MultiSimple
             };
 
-            // Load employees from database
             using (var cmd = new SQLiteCommand("SELECT Id, Name, Position FROM Employees", connection))
             using (var reader = cmd.ExecuteReader())
             {
@@ -331,7 +327,6 @@ namespace Online_Shop_Pet_Project
                 }
             }
 
-            // Add total salary label
             var totalSalary = 0m;
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
@@ -396,7 +391,6 @@ namespace Online_Shop_Pet_Project
             {
                 var selectedProduct = products.First(p => p.Name == productBox.Text);
 
-                // Add to GoodsReceipt
                 using (var cmd = new SQLiteCommand(
                     "INSERT INTO GoodsReceipt (ProductId, Quantity, Supplier, ReceiptDate) VALUES (@productId, @quantity, @supplier, @receiptDate)",
                     connection))
@@ -408,7 +402,6 @@ namespace Online_Shop_Pet_Project
                     cmd.ExecuteNonQuery();
                 }
 
-                // Update product quantity
                 using (var cmd = new SQLiteCommand(
                     "UPDATE Products SET Quantity = Quantity + @quantity WHERE Id = @productId",
                     connection))
@@ -418,7 +411,6 @@ namespace Online_Shop_Pet_Project
                     cmd.ExecuteNonQuery();
                 }
 
-                // Refresh products list
                 LoadProducts();
                 form.Close();
             };
@@ -450,10 +442,8 @@ namespace Online_Shop_Pet_Project
                 ValueMember = "Id"
             };
 
-            // Заполняем ComboBox товарами из базы данных
             var availableProducts = products.Where(p => p.Quantity > 0).ToList();
 
-            // Если в базе нет товаров, добавляем примеры
             if (availableProducts.Count == 0)
             {
                 availableProducts = new List<Product>
@@ -555,13 +545,11 @@ namespace Online_Shop_Pet_Project
                     {
                         try
                         {
-                            // Исправленный запрос с правильным именем столбца ProductId
                             using (var cmd = new SQLiteCommand(
                                 "INSERT INTO GoodsDisposal (ProductId, Quantity, Reason, DisposalDate) " +
                                 "VALUES (@productId, @quantity, @reason, @disposalDate)",
                                 connection, transaction))
                             {
-                                // Для примеров товаров используем NULL, так как их нет в базе
                                 object productIdParam = selectedProduct.Id > 0 ? (object)selectedProduct.Id : DBNull.Value;
                                 cmd.Parameters.AddWithValue("@productId", productIdParam);
                                 cmd.Parameters.AddWithValue("@quantity", quantityBox.Value);
@@ -570,7 +558,6 @@ namespace Online_Shop_Pet_Project
                                 cmd.ExecuteNonQuery();
                             }
 
-                            // Обновляем количество только для реальных товаров (из базы данных)
                             if (selectedProduct.Id > 0)
                             {
                                 using (var cmd = new SQLiteCommand(
@@ -669,7 +656,6 @@ namespace Online_Shop_Pet_Project
         }
     }
 
-    // Add total disposed label
     var totalDisposed = 0;
     foreach (DataGridViewRow row in dataGridView.Rows)
     {

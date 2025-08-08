@@ -50,6 +50,7 @@ namespace Online_Shop_Pet_Project
             if (form.complaintsPanel != null) form.Controls.Remove(form.complaintsPanel);
             if (form.chatSupportPanel != null) form.Controls.Remove(form.chatSupportPanel);
             if (form.knowledgePanel != null) form.Controls.Remove(form.knowledgePanel);
+            if (form.mainPanel != null) form.Controls.Remove(form.mainPanel);
         }
 
         public Button CreateBottomButton(string text, int index, int width = 0)
