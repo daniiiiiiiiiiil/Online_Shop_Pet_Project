@@ -254,7 +254,10 @@ namespace Online_Shop_Pet_Project
 
             return products;
         }
-
+        public string GetConnectionString()
+        {
+            return connectionString;
+        }
         public List<Order> LoadOrders()
         {
             var orders = new List<Order>();

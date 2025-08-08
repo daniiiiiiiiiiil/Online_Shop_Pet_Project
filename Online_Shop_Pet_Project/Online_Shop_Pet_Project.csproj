@@ -100,6 +100,8 @@
     <Compile Include="HallStaffHelper.cs" />
     <Compile Include="HallTask.cs" />
     <Compile Include="Ingredient.cs" />
+    <Compile Include="IngredientRequest.cs" />
+    <Compile Include="IngredientRequirement.cs" />
     <Compile Include="KitchenOrder.cs" />
     <Compile Include="KnowledgeCategory.cs" />
     <Compile Include="LoginForm.cs">
@@ -130,6 +132,7 @@
       <DependentUpon>RegisterForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SellerHelper.cs" />
+    <Compile Include="StatusChange.cs" />
     <Compile Include="SupportChat.cs" />
     <Compile Include="SupportHelper.cs" />
     <Compile Include="SupportTicket.cs" />

@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace Online_Shop_Pet_Project
 {
-    public class Ingredient
+    public class IngredientRequirement
     {
         public string Name { get; set; }
         public double Quantity { get; set; }
         public string Unit { get; set; }
-        public double MinQuantity { get; set; }
     }
 }

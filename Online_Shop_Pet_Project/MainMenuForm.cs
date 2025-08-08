@@ -17,7 +17,7 @@ namespace Online_Shop_Pet_Project
         public Panel productsPanel, productDetailsPanel, ordersPanel, cartPanel, deliveryPanel, profilePanel,
             deliveriesPanel, routePanel, earningsPanel, cookOrdersPanel, cookMenuPanel, ingredientsPanel,
             hallStaffOrdersPanel, storeMapPanel, hallStaffHistoryPanel, helpPanel, ticketsPanel, historyPanel,
-            offlineOrderPanel, returnPanel, chatPanel, complaintsPanel, chatSupportPanel, knowledgePanel, mainPanel;
+            offlineOrderPanel, returnPanel, chatPanel, complaintsPanel, chatSupportPanel, knowledgePanel, mainPanel, ingredientHistoryPanel, orderHistoryPanel;
 
         public ChatTicket currentChat;
         public List<Product> products = new List<Product>();

@@ -6,13 +6,9 @@ using System.Threading.Tasks;
 
 namespace Online_Shop_Pet_Project
 {
-    public class KitchenOrder
+    public class StatusChange
     {
-        public int Id { get; set; }
-        public int TableNumber { get; set; }
-        public string Items { get; set; }
         public string Status { get; set; }
         public DateTime Time { get; set; }
-        public List<StatusChange> StatusHistory { get; set; } = new List<StatusChange>();
     }
 }

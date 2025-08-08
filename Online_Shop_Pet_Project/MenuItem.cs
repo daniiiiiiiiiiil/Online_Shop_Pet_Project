@@ -12,5 +12,6 @@ namespace Online_Shop_Pet_Project
         public decimal Price { get; set; }
         public string Ingredients { get; set; }
         public int CookingTime { get; set; }
+        public List<IngredientRequirement> RequiredIngredients { get; set; } = new List<IngredientRequirement>();
     }
 }
