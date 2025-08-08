@@ -11,7 +11,6 @@ namespace Online_Shop_Pet_Project
         private bool isEmployeeRegistration = false;
         private Color primaryColor = Color.FromArgb(30, 144, 255);
 
-        // Поля для управления видимостью элементов
         private Label employeeDocumentsLabel;
         private Button employeeDocumentsButton;
         private Label employeePhotoLabel;
@@ -19,12 +18,10 @@ namespace Online_Shop_Pet_Project
         private Label customerOptionalPhotoLabel;
         private Button customerOptionalPhotoButton;
 
-        // Поля для хранения выбранных файлов
         private string employeeDocumentsPath = "";
         private string employeePhotoPath = "";
         private string customerPhotoPath = "";
 
-        // Основные поля ввода
         private TextBox contactTextBox;
         private TextBox passwordTextBox;
 
@@ -435,7 +432,6 @@ namespace Online_Shop_Pet_Project
             {
                 IsEmployee = isEmployeeRegistration;
 
-                // Сохраняем данные текущего пользователя
                 CurrentUser.Username = username;
                 CurrentUser.IsEmployee = isEmployeeRegistration;
 
