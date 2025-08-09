@@ -104,17 +104,6 @@ namespace Online_Shop_Pet_Project
             }
         }
 
-        public Color GetDeliveryStatusColor(string status)
-        {
-            switch (status)
-            {
-                case "В пути": return Color.Blue;
-                case "Доставлено": return Color.Green;
-                case "Ожидает": return Color.Orange;
-                case "Отменено": return Color.Red;
-                default: return Color.Black;
-            }
-        }
 
         public Color GetKitchenOrderStatusColor(string status)
         {

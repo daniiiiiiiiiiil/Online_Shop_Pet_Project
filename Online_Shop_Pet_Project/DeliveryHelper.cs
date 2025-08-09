@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Online_Shop_Pet_Project
@@ -12,7 +10,68 @@ namespace Online_Shop_Pet_Project
     {
         private MainMenuForm form;
         public UIHelper uIHelper;
-        public DeliveryHelper(MainMenuForm form) { this.form = form; }
+        private List<Delivery> allDeliveries = new List<Delivery>();
+        private List<Delivery> completedDeliveries = new List<Delivery>();
+        private Image routeMapImage;
+
+        public DeliveryHelper(MainMenuForm form)
+        {
+            this.form = form;
+            InitializeSampleData();
+            LoadMapImage();
+        }
+
+        private void InitializeSampleData()
+        {
+            allDeliveries = new List<Delivery>
+            {
+                new Delivery
+                {
+                    Id = 1001,
+                    Address = "ул. Ленина, д. 10, кв. 5",
+                    CustomerName = "Иванов Иван",
+                    CustomerPhone = "+7 (123) 456-78-90",
+                    Status = "Поступил",
+                    StatusHistory = new List<DeliveryStatus>
+                    {
+                        new DeliveryStatus("Поступил", DateTime.Now.AddHours(-2))
+                    },
+                    Payment = 500,
+                    OrderItems = new List<string> { "Пицца Маргарита", "Кока-кола 1л" }
+                },
+                new Delivery
+                {
+                    Id = 1002,
+                    Address = "пр. Мира, д. 25, кв. 12",
+                    CustomerName = "Петрова Анна",
+                    CustomerPhone = "+7 (987) 654-32-10",
+                    Status = "Поступил",
+                    StatusHistory = new List<DeliveryStatus>
+                    {
+                        new DeliveryStatus("Поступил", DateTime.Now.AddHours(-1))
+                    },
+                    Payment = 450,
+                    OrderItems = new List<string> { "Ролл Калифорния", "Суп Том Ям" }
+                }
+            };
+        }
+
+        private void LoadMapImage()
+        {
+            try
+            {
+                routeMapImage = Image.FromFile("map_placeholder.png");
+            }
+            catch
+            {
+                routeMapImage = new Bitmap(600, 400);
+                using (var g = Graphics.FromImage(routeMapImage))
+                {
+                    g.Clear(Color.White);
+                    g.DrawString("Карта маршрута", new Font("Arial", 20), Brushes.Black, 200, 180);
+                }
+            }
+        }
 
         public void ShowDeliveryOptions()
         {
@@ -166,14 +225,8 @@ namespace Online_Shop_Pet_Project
             };
             form.deliveriesPanel.Controls.Add(title);
 
-            var deliveries = new List<Delivery>
-            {
-                new Delivery { Id = 1001, Address = "ул. Ленина, д. 10, кв. 5", CustomerName = "Иванов Иван", Status = "В пути", Payment = 500 },
-                new Delivery { Id = 1002, Address = "пр. Мира, д. 25, кв. 12", CustomerName = "Петрова Анна", Status = "Ожидает", Payment = 450 }
-            };
-
             int yPos = 60;
-            foreach (var delivery in deliveries)
+            foreach (var delivery in allDeliveries)
             {
                 var deliveryPanel = new Panel
                 {
@@ -214,7 +267,6 @@ namespace Online_Shop_Pet_Project
                 {
                     Text = $"Статус: {delivery.Status}",
                     Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                    ForeColor = form.UIHelper.GetDeliveryStatusColor(delivery.Status),
                     Location = new Point(form.ClientSize.Width - 150, 35),
                     AutoSize = true
                 };
@@ -271,48 +323,73 @@ namespace Online_Shop_Pet_Project
             };
             form.routePanel.Controls.Add(title);
 
-            var routePoints = new List<string>
+            var mapBox = new PictureBox
             {
-                "1. ул. Ленина, д. 10, кв. 5 (Иванов Иван)",
-                "2. пр. Мира, д. 25, кв. 12 (Петрова Анна)",
-                "3. ул. Гагарина, д. 7, кв. 33 (Сидоров Петр)"
+                Image = routeMapImage,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(form.routePanel.Width - 40, 200),
+                Location = new Point(20, 50),
+                BorderStyle = BorderStyle.FixedSingle
             };
+            form.routePanel.Controls.Add(mapBox);
 
-            int yPos = 60;
-            foreach (var point in routePoints)
+            var historyLabel = new Label
+            {
+                Text = "История доставок:",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Location = new Point(20, 270),
+                AutoSize = true
+            };
+            form.routePanel.Controls.Add(historyLabel);
+
+            var routePoints = allDeliveries
+                .OrderBy(d => d.StatusHistory.Last().Timestamp)
+                .ToList();
+
+            int yPos = 310;
+            foreach (var delivery in routePoints)
             {
                 var pointPanel = new Panel
                 {
                     Location = new Point(20, yPos),
-                    Size = new Size(form.routePanel.Width - 40, 50),
+                    Size = new Size(form.routePanel.Width - 40, 80),
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.White
                 };
 
                 var pointLabel = new Label
                 {
-                    Text = point,
+                    Text = $"{delivery.Address} ({delivery.CustomerName})",
                     Font = new Font("Segoe UI", 10),
-                    Location = new Point(10, 15),
+                    Location = new Point(10, 10),
                     AutoSize = true
                 };
                 pointPanel.Controls.Add(pointLabel);
 
-                var deliveredButton = new Button
+                var statusHistory = string.Join(" → ", delivery.StatusHistory
+                    .OrderBy(s => s.Timestamp)
+                    .Select(s => $"{s.Status} ({s.Timestamp:HH:mm})"));
+
+                var historyLabel2 = new Label
                 {
-                    Text = "Доставлено",
-                    BackColor = Color.FromArgb(70, 130, 180),
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    Size = new Size(100, 25),
-                    Location = new Point(pointPanel.Width - 120, 12),
-                    Font = new Font("Segoe UI", 9)
+                    Text = $"Статусы: {statusHistory}",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(10, 30),
+                    AutoSize = true
                 };
-                deliveredButton.Click += (s, e) => MarkAsDelivered(point);
-                pointPanel.Controls.Add(deliveredButton);
+                pointPanel.Controls.Add(historyLabel2);
+
+                var paymentLabel = new Label
+                {
+                    Text = $"Оплата: {delivery.Payment} ₽",
+                    Font = new Font("Segoe UI", 9),
+                    Location = new Point(10, 50),
+                    AutoSize = true
+                };
+                pointPanel.Controls.Add(paymentLabel);
 
                 form.routePanel.Controls.Add(pointPanel);
-                yPos += 60;
+                yPos += 90;
             }
 
             form.Controls.Add(form.routePanel);
@@ -340,69 +417,119 @@ namespace Online_Shop_Pet_Project
             };
             form.earningsPanel.Controls.Add(title);
 
-            var todayEarnings = new Label
+            decimal todayEarnings = allDeliveries
+                .Where(d => d.StatusHistory.Any(s => s.Timestamp.Date == DateTime.Today))
+                .Sum(d => d.Payment);
+
+            decimal weekEarnings = allDeliveries
+                .Where(d => d.StatusHistory.Any(s => s.Timestamp.Date >= DateTime.Today.AddDays(-7)))
+                .Sum(d => d.Payment);
+
+            decimal monthEarnings = allDeliveries
+                .Where(d => d.StatusHistory.Any(s => s.Timestamp.Date >= DateTime.Today.AddMonths(-1)))
+                .Sum(d => d.Payment);
+
+            int completedCount = allDeliveries.Count(d => d.Status == "Доставлен" || d.Status == "Отменен");
+
+            var todayLabel = new Label
             {
-                Text = "Сегодня: 950 ₽",
+                Text = $"Сегодня: {todayEarnings} ₽",
                 Font = new Font("Segoe UI", 14),
                 Location = new Point(20, 60),
                 AutoSize = true
             };
-            form.earningsPanel.Controls.Add(todayEarnings);
+            form.earningsPanel.Controls.Add(todayLabel);
 
-            var weekEarnings = new Label
+            var weekLabel = new Label
             {
-                Text = "За неделю: 6,500 ₽",
+                Text = $"За неделю: {weekEarnings} ₽",
                 Font = new Font("Segoe UI", 14),
                 Location = new Point(20, 100),
                 AutoSize = true
             };
-            form.earningsPanel.Controls.Add(weekEarnings);
+            form.earningsPanel.Controls.Add(weekLabel);
 
-            var monthEarnings = new Label
+            var monthLabel = new Label
             {
-                Text = "За месяц: 28,750 ₽",
+                Text = $"За месяц: {monthEarnings} ₽",
                 Font = new Font("Segoe UI", 14),
                 Location = new Point(20, 140),
                 AutoSize = true
             };
-            form.earningsPanel.Controls.Add(monthEarnings);
+            form.earningsPanel.Controls.Add(monthLabel);
 
-            var deliveriesCount = new Label
+            var deliveriesLabel = new Label
             {
-                Text = "Всего доставок: 125",
+                Text = $"Всего доставок: {completedCount}",
                 Font = new Font("Segoe UI", 12),
                 Location = new Point(20, 190),
                 AutoSize = true
             };
-            form.earningsPanel.Controls.Add(deliveriesCount);
+            form.earningsPanel.Controls.Add(deliveriesLabel);
+
+            var chartTitle = new Label
+            {
+                Text = "График заработка за последние 7 дней:",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Location = new Point(20, 230),
+                AutoSize = true
+            };
+            form.earningsPanel.Controls.Add(chartTitle);
+
+            var chartPanel = new Panel
+            {
+                Location = new Point(20, 260),
+                Size = new Size(form.earningsPanel.Width - 60, 150),
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
+            };
+
+            var chartPlaceholder = new Label
+            {
+                Text = "[График заработка]",
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(10, 10),
+                AutoSize = true
+            };
+            chartPanel.Controls.Add(chartPlaceholder);
+
+            form.earningsPanel.Controls.Add(chartPanel);
 
             form.Controls.Add(form.earningsPanel);
         }
 
         public void MarkAsDelivered(string point)
         {
-            MessageBox.Show($"Доставка по адресу {point} отмечена как выполненная", "Доставка завершена", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var delivery = allDeliveries.FirstOrDefault(d => point.Contains(d.Address));
+            if (delivery != null)
+            {
+                delivery.Status = "Доставлен";
+                delivery.StatusHistory.Add(new DeliveryStatus("Доставлен", DateTime.Now));
+                completedDeliveries.Add(delivery);
+                allDeliveries.Remove(delivery);
+
+                MessageBox.Show($"Доставка по адресу {delivery.Address} отмечена как выполненная",
+                    "Доставка завершена", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                ShowCourierRoute();
+            }
         }
 
         public void ShowDeliveryDetails(int deliveryId)
         {
-            var delivery = new Delivery
-            {
-                Id = deliveryId,
-                Address = "ул. Ленина, д. 10, кв. 5",
-                CustomerName = "Иванов Иван",
-                CustomerPhone = "+7 (123) 456-78-90",
-                Status = "В пути",
-                Payment = 500,
-                OrderTime = DateTime.Now.AddHours(-1),
-                EstimatedDeliveryTime = DateTime.Now.AddHours(1),
-                OrderItems = new List<string> { "Пицца Маргарита", "Кока-кола 1л" }
-            };
+            var delivery = allDeliveries.FirstOrDefault(d => d.Id == deliveryId) ??
+                         completedDeliveries.FirstOrDefault(d => d.Id == deliveryId);
 
-            var form = new Form
+            if (delivery == null)
+            {
+                MessageBox.Show("Доставка не найдена", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var detailsForm = new Form
             {
                 Text = $"Детали доставки #{delivery.Id}",
-                Size = new Size(500, 400),
+                Size = new Size(500, 500),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false
@@ -442,9 +569,8 @@ namespace Online_Shop_Pet_Project
 
             var statusLabel = new Label
             {
-                Text = $"Статус: {delivery.Status}",
+                Text = $"Текущий статус: {delivery.Status}",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                ForeColor = uIHelper.GetDeliveryStatusColor(delivery.Status),
                 Location = new Point(20, 140),
                 AutoSize = true
             };
@@ -459,7 +585,7 @@ namespace Online_Shop_Pet_Project
 
             var timeLabel = new Label
             {
-                Text = $"Время заказа: {delivery.OrderTime:HH:mm}\nОриентировочное время доставки: {delivery.EstimatedDeliveryTime:HH:mm}",
+                Text = $"Время заказа: {delivery.StatusHistory.First().Timestamp:HH:mm}",
                 Font = new Font("Segoe UI", 10),
                 Location = new Point(20, 200),
                 AutoSize = true
@@ -469,30 +595,104 @@ namespace Online_Shop_Pet_Project
             {
                 Text = "Состав заказа:\n" + string.Join("\n", delivery.OrderItems),
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(20, 250),
+                Location = new Point(20, 230),
                 AutoSize = true
             };
 
-            var completeButton = new Button
+            var statusHistoryLabel = new Label
             {
-                Text = "Завершить доставку",
+                Text = "История статусов:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Location = new Point(20, 280),
+                AutoSize = true
+            };
+
+            var statusHistoryList = new ListBox
+            {
+                Font = new Font("Segoe UI", 9),
+                Location = new Point(20, 310),
+                Size = new Size(440, 100),
+                IntegralHeight = false
+            };
+
+            foreach (var status in delivery.StatusHistory.OrderBy(s => s.Timestamp))
+            {
+                statusHistoryList.Items.Add($"{status.Timestamp:HH:mm} - {status.Status}");
+            }
+
+            if (delivery.Status != "Доставлен" && delivery.Status != "Отменен")
+            {
+                var statusPanel = new Panel
+                {
+                    Location = new Point(20, 420),
+                    Size = new Size(440, 40),
+                    BorderStyle = BorderStyle.None
+                };
+
+                var statusComboBox = new ComboBox
+                {
+                    Location = new Point(0, 5),
+                    Size = new Size(200, 20),
+                    DropDownStyle = ComboBoxStyle.DropDownList
+                };
+                statusComboBox.Items.AddRange(new[] { "Курьер получил заказ", "Курьер везет заказ", "Заказ отдан", "Заказ отменен" });
+
+                var updateStatusButton = new Button
+                {
+                    Text = "Обновить статус",
+                    BackColor = Color.FromArgb(70, 130, 180),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Size = new Size(120, 25),
+                    Location = new Point(210, 5),
+                    Font = new Font("Segoe UI", 9)
+                };
+                updateStatusButton.Click += (s, e) =>
+                {
+                    if (statusComboBox.SelectedItem != null)
+                    {
+                        string newStatus = statusComboBox.SelectedItem.ToString();
+                        delivery.Status = newStatus;
+                        delivery.StatusHistory.Add(new DeliveryStatus(newStatus, DateTime.Now));
+                        statusHistoryList.Items.Add($"{DateTime.Now:HH:mm} - {newStatus}");
+                        statusLabel.Text = $"Текущий статус: {newStatus}";
+
+                        if (newStatus == "Заказ отдан" || newStatus == "Заказ отменен")
+                        {
+                            completedDeliveries.Add(delivery);
+                            allDeliveries.Remove(delivery);
+                        }
+
+                        MessageBox.Show("Статус обновлен", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                };
+
+                statusPanel.Controls.Add(statusComboBox);
+                statusPanel.Controls.Add(updateStatusButton);
+                detailsForm.Controls.Add(statusPanel);
+            }
+
+            var closeButton = new Button
+            {
+                Text = "Закрыть",
                 BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(150, 30),
-                Location = new Point(300, 320),
+                Size = new Size(100, 30),
+                Location = new Point(360, 420),
                 DialogResult = DialogResult.OK
             };
-            completeButton.Click += (s, e) => form.Close();
+            closeButton.Click += (s, e) => detailsForm.Close();
 
-            form.Controls.AddRange(new Control[] { idLabel, addressLabel, customerLabel, phoneLabel,
-                            statusLabel, paymentLabel, timeLabel, itemsLabel, completeButton });
-            form.ShowDialog();
+            detailsForm.Controls.AddRange(new Control[] { idLabel, addressLabel, customerLabel, phoneLabel,
+                statusLabel, paymentLabel, timeLabel, itemsLabel, statusHistoryLabel, statusHistoryList, closeButton });
+
+            detailsForm.ShowDialog();
         }
 
         public void ChangeCourierStatus()
         {
-            var form = new Form
+            var statusForm = new Form
             {
                 Text = "Изменение статуса",
                 Size = new Size(300, 200),
@@ -511,7 +711,8 @@ namespace Online_Shop_Pet_Project
             var statusComboBox = new ComboBox
             {
                 Location = new Point(20, 50),
-                Size = new Size(250, 20)
+                Size = new Size(250, 20),
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
             statusComboBox.Items.AddRange(new[] { "Доступен", "Не доступен", "На доставке", "Перерыв" });
 
@@ -525,10 +726,22 @@ namespace Online_Shop_Pet_Project
                 Location = new Point(100, 100),
                 DialogResult = DialogResult.OK
             };
-            saveButton.Click += (s, e) => form.Close();
+            saveButton.Click += (s, e) =>
+            {
+                if (statusComboBox.SelectedItem != null)
+                {
+                    MessageBox.Show($"Статус курьера изменен на: {statusComboBox.SelectedItem}",
+                        "Статус обновлен", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    statusForm.Close();
+                }
+            };
 
-            form.Controls.AddRange(new Control[] { statusLabel, statusComboBox, saveButton });
-            form.ShowDialog();
+            statusForm.Controls.AddRange(new Control[] { statusLabel, statusComboBox, saveButton });
+            statusForm.ShowDialog();
         }
     }
+
+    
+
+    
 }
