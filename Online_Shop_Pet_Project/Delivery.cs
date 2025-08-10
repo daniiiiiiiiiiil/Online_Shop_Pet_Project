@@ -16,5 +16,6 @@ namespace Online_Shop_Pet_Project
         public List<DeliveryStatus> StatusHistory { get; set; } = new List<DeliveryStatus>();
         public decimal Payment { get; set; }
         public List<string> OrderItems { get; set; }
+
     }
 }

@@ -313,6 +313,7 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.White
             };
 
+            // Заголовок
             var title = new Label
             {
                 Text = "Мой маршрут",
@@ -323,31 +324,45 @@ namespace Online_Shop_Pet_Project
             };
             form.routePanel.Controls.Add(title);
 
-            var mapBox = new PictureBox
+            var mapBrowser = new WebBrowser
             {
-                Image = routeMapImage,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                Size = new Size(form.routePanel.Width - 40, 200),
                 Location = new Point(20, 50),
-                BorderStyle = BorderStyle.FixedSingle
+                Size = new Size(form.routePanel.Width - 40, 400),
+                ScrollBarsEnabled = false
             };
-            form.routePanel.Controls.Add(mapBox);
 
+            // HTML-код для встраивания карты
+            string mapHtml = @"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Яндекс Карта</title>
+    </head>
+    <body style='margin:0;padding:0;'>
+        <a href='https://yandex.ru/maps/?um=constructor%3Ad5044b4538d7f1cedf7663e0c8f4c0237879af97684f6f215f5a831888423378&amp;source=constructorStatic' target='_blank'>
+            <img src='https://api-maps.yandex.ru/services/constructor/1.0/static/?um=constructor%3Ad5044b4538d7f1cedf7663e0c8f4c0237879af97684f6f215f5a831888423378&amp;width=600&amp;height=400&amp;lang=ru_RU' 
+                 alt='' style='border: 0; width: 100%; height: 100%;' />
+        </a>
+    </body>
+    </html>";
+
+            mapBrowser.DocumentText = mapHtml;
+            form.routePanel.Controls.Add(mapBrowser);
+
+            // История доставок (смещаем ниже карты)
             var historyLabel = new Label
             {
                 Text = "История доставок:",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Location = new Point(20, 270),
+                Location = new Point(20, 470),  // 60 (заголовок) + 400 (карта) + 10 (отступ)
                 AutoSize = true
             };
             form.routePanel.Controls.Add(historyLabel);
 
-            var routePoints = allDeliveries
-                .OrderBy(d => d.StatusHistory.Last().Timestamp)
-                .ToList();
-
-            int yPos = 310;
-            foreach (var delivery in routePoints)
+            // Список доставок
+            int yPos = 500;  // Начальная позиция для первой доставки
+            foreach (var delivery in allDeliveries.OrderBy(d => d.StatusHistory.Last().Timestamp))
             {
                 var pointPanel = new Panel
                 {
@@ -357,39 +372,33 @@ namespace Online_Shop_Pet_Project
                     BackColor = Color.White
                 };
 
-                var pointLabel = new Label
+                // Добавляем элементы в панель доставки
+                pointPanel.Controls.Add(new Label
                 {
                     Text = $"{delivery.Address} ({delivery.CustomerName})",
                     Font = new Font("Segoe UI", 10),
                     Location = new Point(10, 10),
                     AutoSize = true
-                };
-                pointPanel.Controls.Add(pointLabel);
+                });
 
-                var statusHistory = string.Join(" → ", delivery.StatusHistory
-                    .OrderBy(s => s.Timestamp)
-                    .Select(s => $"{s.Status} ({s.Timestamp:HH:mm})"));
-
-                var historyLabel2 = new Label
+                pointPanel.Controls.Add(new Label
                 {
-                    Text = $"Статусы: {statusHistory}",
+                    Text = $"Статусы: {string.Join(" → ", delivery.StatusHistory.OrderBy(s => s.Timestamp).Select(s => $"{s.Status} ({s.Timestamp:HH:mm})"))}",
                     Font = new Font("Segoe UI", 9),
                     Location = new Point(10, 30),
                     AutoSize = true
-                };
-                pointPanel.Controls.Add(historyLabel2);
+                });
 
-                var paymentLabel = new Label
+                pointPanel.Controls.Add(new Label
                 {
                     Text = $"Оплата: {delivery.Payment} ₽",
                     Font = new Font("Segoe UI", 9),
                     Location = new Point(10, 50),
                     AutoSize = true
-                };
-                pointPanel.Controls.Add(paymentLabel);
+                });
 
                 form.routePanel.Controls.Add(pointPanel);
-                yPos += 90;
+                yPos += 90;  // Увеличиваем позицию для следующей доставки
             }
 
             form.Controls.Add(form.routePanel);
@@ -740,8 +749,4 @@ namespace Online_Shop_Pet_Project
             statusForm.ShowDialog();
         }
     }
-
-    
-
-    
 }
