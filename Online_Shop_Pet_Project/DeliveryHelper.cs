@@ -313,7 +313,6 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.White
             };
 
-            // Заголовок
             var title = new Label
             {
                 Text = "Мой маршрут",
@@ -330,8 +329,7 @@ namespace Online_Shop_Pet_Project
                 Size = new Size(form.routePanel.Width - 40, 400),
                 ScrollBarsEnabled = false
             };
-
-            // HTML-код для встраивания карты
+            //яндекс не дает полностью пользоваться картой бесплатно, так что чтолько часть, но если купить подписку можно добавить полноценную карту
             string mapHtml = @"
     <!DOCTYPE html>
     <html>
@@ -350,18 +348,16 @@ namespace Online_Shop_Pet_Project
             mapBrowser.DocumentText = mapHtml;
             form.routePanel.Controls.Add(mapBrowser);
 
-            // История доставок (смещаем ниже карты)
             var historyLabel = new Label
             {
                 Text = "История доставок:",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Location = new Point(20, 470),  // 60 (заголовок) + 400 (карта) + 10 (отступ)
+                Location = new Point(20, 470),  
                 AutoSize = true
             };
             form.routePanel.Controls.Add(historyLabel);
 
-            // Список доставок
-            int yPos = 500;  // Начальная позиция для первой доставки
+            int yPos = 500; 
             foreach (var delivery in allDeliveries.OrderBy(d => d.StatusHistory.Last().Timestamp))
             {
                 var pointPanel = new Panel
@@ -372,7 +368,6 @@ namespace Online_Shop_Pet_Project
                     BackColor = Color.White
                 };
 
-                // Добавляем элементы в панель доставки
                 pointPanel.Controls.Add(new Label
                 {
                     Text = $"{delivery.Address} ({delivery.CustomerName})",
@@ -398,7 +393,7 @@ namespace Online_Shop_Pet_Project
                 });
 
                 form.routePanel.Controls.Add(pointPanel);
-                yPos += 90;  // Увеличиваем позицию для следующей доставки
+                yPos += 90; 
             }
 
             form.Controls.Add(form.routePanel);

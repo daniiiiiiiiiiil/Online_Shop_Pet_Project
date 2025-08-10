@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -8,7 +9,96 @@ namespace Online_Shop_Pet_Project
     public class HallStaffHelper
     {
         private MainMenuForm form;
-        public HallStaffHelper(MainMenuForm form) { this.form = form; }
+        private SQLiteConnection connection;
+        private string dbPath = "shop_database.db";
+
+        public HallStaffHelper(MainMenuForm form)
+        {
+            this.form = form;
+            InitializeDatabase();
+        }
+
+        private void InitializeDatabase()
+        {
+            connection = new SQLiteConnection($"Data Source={dbPath};Version=3;");
+            connection.Open();
+
+            // Создаем таблицу заказов, если она не существует
+            string createOrdersTable = @"
+                CREATE TABLE IF NOT EXISTS HallOrders (
+                    Id INTEGER PRIMARY KEY,
+                    Type TEXT NOT NULL,
+                    Items TEXT NOT NULL,
+                    Status TEXT NOT NULL,
+                    Location TEXT NOT NULL,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                )";
+
+            // Создаем таблицу истории заданий
+            string createTasksTable = @"
+                CREATE TABLE IF NOT EXISTS HallTasks (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    OrderId INTEGER,
+                    Description TEXT NOT NULL,
+                    Status TEXT NOT NULL,
+                    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(OrderId) REFERENCES HallOrders(Id)
+                )";
+
+            using (var command = new SQLiteCommand(createOrdersTable, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new SQLiteCommand(createTasksTable, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            // Добавляем тестовые данные, если таблица пуста
+            if (IsTableEmpty("HallOrders"))
+            {
+                InsertSampleData();
+            }
+        }
+
+        private bool IsTableEmpty(string tableName)
+        {
+            string query = $"SELECT COUNT(*) FROM {tableName}";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                int count = Convert.ToInt32(command.ExecuteScalar());
+                return count == 0;
+            }
+        }
+
+        private void InsertSampleData()
+        {
+            string insertOrders = @"
+                INSERT INTO HallOrders (Id, Type, Items, Status, Location)
+                VALUES 
+                (1001, 'Самовывоз', 'Смартфон Samsung, Наушники Sony', 'Поступил', 'Зал 1'),
+                (1002, 'Доставка', 'Пицца Маргарита, Салат Цезарь', 'Поступил', 'Кухня'),
+                (1003, 'Самовывоз', 'Книга ''Clean Code''', 'Поступил', 'Секция 5')";
+
+            string insertTasks = @"
+                INSERT INTO HallTasks (OrderId, Description, Status)
+                VALUES 
+                (1001, 'Сбор заказа #1001 для самовывоза', 'Выполнено'),
+                (1002, 'Подготовка товаров для доставки #1002', 'Выполнено'),
+                (1003, 'Вынос товаров в торговый зал', 'Выполнено')";
+
+            using (var command = new SQLiteCommand(insertOrders, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            using (var command = new SQLiteCommand(insertTasks, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
 
         public void ShowHallStaffOrdersPanel()
         {
@@ -32,12 +122,8 @@ namespace Online_Shop_Pet_Project
             };
             form.hallStaffOrdersPanel.Controls.Add(title);
 
-            var orders = new List<HallOrder>
-            {
-                new HallOrder { Id = 1001, Type = "Самовывоз", Items = "Смартфон Samsung, Наушники Sony", Status = "В обработке", Location = "Зал 1" },
-                new HallOrder { Id = 1002, Type = "Доставка", Items = "Пицца Маргарита, Салат Цезарь", Status = "Готов к сборке", Location = "Кухня" },
-                new HallOrder { Id = 1003, Type = "Самовывоз", Items = "Книга 'Clean Code'", Status = "Готов к выдаче", Location = "Секция 5" }
-            };
+            // Получаем заказы из базы данных
+            List<HallOrder> orders = GetOrdersFromDatabase();
 
             int yPos = 60;
             foreach (var order in orders)
@@ -97,11 +183,12 @@ namespace Online_Shop_Pet_Project
                 };
                 orderPanel.Controls.Add(statusLabel);
 
-                if (order.Status == "Готов к сборке")
+                // Кнопки для управления статусом заказа
+                if (order.Status == "Поступил")
                 {
-                    var prepareButton = new Button
+                    var startButton = new Button
                     {
-                        Text = "Собрать заказ",
+                        Text = "Начать сборку",
                         BackColor = Color.FromArgb(70, 130, 180),
                         ForeColor = Color.White,
                         FlatStyle = FlatStyle.Flat,
@@ -110,8 +197,40 @@ namespace Online_Shop_Pet_Project
                         Font = new Font("Segoe UI", 9),
                         Tag = order.Id
                     };
-                    prepareButton.Click += (s, e) => MarkOrderAsReady(order.Id);
-                    form.hallStaffOrdersPanel.Controls.Add(prepareButton);
+                    startButton.Click += (s, e) => UpdateOrderStatus(order.Id, "Собирается");
+                    orderPanel.Controls.Add(startButton);
+                }
+                else if (order.Status == "Собирается")
+                {
+                    var readyButton = new Button
+                    {
+                        Text = "Заказ собран",
+                        BackColor = Color.FromArgb(70, 180, 130),
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(120, 30),
+                        Location = new Point(form.ClientSize.Width - 280, 75),
+                        Font = new Font("Segoe UI", 9),
+                        Tag = order.Id
+                    };
+                    readyButton.Click += (s, e) => UpdateOrderStatus(order.Id, "Собран");
+                    orderPanel.Controls.Add(readyButton);
+                }
+                else if (order.Status == "Собран")
+                {
+                    var deliveredButton = new Button
+                    {
+                        Text = "Заказ выдан",
+                        BackColor = Color.FromArgb(180, 70, 130),
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(120, 30),
+                        Location = new Point(form.ClientSize.Width - 280, 75),
+                        Font = new Font("Segoe UI", 9),
+                        Tag = order.Id
+                    };
+                    deliveredButton.Click += (s, e) => UpdateOrderStatus(order.Id, "Отдан");
+                    orderPanel.Controls.Add(deliveredButton);
                 }
 
                 var locationButton = new Button
@@ -126,13 +245,63 @@ namespace Online_Shop_Pet_Project
                     Tag = order.Id
                 };
                 locationButton.Click += (s, e) => ShowProductLocation(order.Id);
-                form.hallStaffOrdersPanel.Controls.Add(locationButton);
+                orderPanel.Controls.Add(locationButton);
 
                 form.hallStaffOrdersPanel.Controls.Add(orderPanel);
                 yPos += 130;
             }
 
             form.Controls.Add(form.hallStaffOrdersPanel);
+        }
+
+        private List<HallOrder> GetOrdersFromDatabase()
+        {
+            List<HallOrder> orders = new List<HallOrder>();
+
+            string query = "SELECT Id, Type, Items, Status, Location FROM HallOrders WHERE Status != 'Отдан' ORDER BY Status, CreatedAt";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        orders.Add(new HallOrder
+                        {
+                            Id = reader.GetInt32(0),
+                            Type = reader.GetString(1),
+                            Items = reader.GetString(2),
+                            Status = reader.GetString(3),
+                            Location = reader.GetString(4)
+                        });
+                    }
+                }
+            }
+
+            return orders;
+        }
+
+        private void UpdateOrderStatus(int orderId, string newStatus)
+        {
+            string updateQuery = "UPDATE HallOrders SET Status = @Status, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id";
+            using (var command = new SQLiteCommand(updateQuery, connection))
+            {
+                command.Parameters.AddWithValue("@Status", newStatus);
+                command.Parameters.AddWithValue("@Id", orderId);
+                command.ExecuteNonQuery();
+            }
+
+            // Добавляем запись в историю
+            string description = $"Изменение статуса заказа #{orderId} на '{newStatus}'";
+            string insertQuery = "INSERT INTO HallTasks (OrderId, Description, Status) VALUES (@OrderId, @Description, 'Выполнено')";
+            using (var command = new SQLiteCommand(insertQuery, connection))
+            {
+                command.Parameters.AddWithValue("@OrderId", orderId);
+                command.Parameters.AddWithValue("@Description", description);
+                command.ExecuteNonQuery();
+            }
+
+            MessageBox.Show($"Статус заказа #{orderId} изменен на '{newStatus}'", "Обновление статуса");
+            ShowHallStaffOrdersPanel();
         }
 
         public void ShowStoreMap()
@@ -186,27 +355,26 @@ namespace Online_Shop_Pet_Project
 
         public void ShowProductLocation(int orderId)
         {
-            var locations = new Dictionary<int, string>
+            string location = "";
+            string query = "SELECT Location FROM HallOrders WHERE Id = @Id";
+            using (var command = new SQLiteCommand(query, connection))
             {
-                {1001, "Секция электроники, стеллаж A3"},
-                {1002, "Кухня, холодильник B2"},
-                {1003, "Секция книг, стеллаж D7"}
-            };
+                command.Parameters.AddWithValue("@Id", orderId);
+                var result = command.ExecuteScalar();
+                if (result != null)
+                {
+                    location = result.ToString();
+                }
+            }
 
-            if (locations.ContainsKey(orderId))
+            if (!string.IsNullOrEmpty(location))
             {
-                MessageBox.Show($"Товары заказа #{orderId} находятся:\n{locations[orderId]}", "Расположение товаров");
+                MessageBox.Show($"Товары заказа #{orderId} находятся:\n{location}", "Расположение товаров");
             }
             else
             {
                 MessageBox.Show($"Расположение для заказа #{orderId} не найдено", "Ошибка");
             }
-        }
-
-        public void MarkOrderAsReady(int orderId)
-        {
-            MessageBox.Show($"Заказ #{orderId} отмечен как собранный и готов к выдаче!", "Статус заказа");
-            ShowHallStaffOrdersPanel();
         }
 
         public void ShowHallStaffHistory()
@@ -231,12 +399,8 @@ namespace Online_Shop_Pet_Project
             };
             form.hallStaffHistoryPanel.Controls.Add(title);
 
-            var historyItems = new List<HallTask>
-            {
-                new HallTask { Date = DateTime.Now.AddDays(-1), Description = "Сбор заказа #1001 для самовывоза", Status = "Выполнено" },
-                new HallTask { Date = DateTime.Now.AddDays(-2), Description = "Подготовка товаров для доставки #1002", Status = "Выполнено" },
-                new HallTask { Date = DateTime.Now.AddDays(-3), Description = "Вынос товаров в торговый зал", Status = "Выполнено" }
-            };
+            // Получаем историю из базы данных
+            List<HallTask> historyItems = GetHistoryFromDatabase();
 
             int yPos = 60;
             foreach (var task in historyItems)
@@ -251,7 +415,7 @@ namespace Online_Shop_Pet_Project
 
                 var dateLabel = new Label
                 {
-                    Text = task.Date.ToString("dd.MM.yyyy HH:mm"),
+                    Text = task.CreatedAt.ToString("dd.MM.yyyy HH:mm"),
                     Font = new Font("Segoe UI", 10),
                     Location = new Point(10, 10),
                     AutoSize = true
@@ -282,6 +446,30 @@ namespace Online_Shop_Pet_Project
             }
 
             form.Controls.Add(form.hallStaffHistoryPanel);
+        }
+
+        private List<HallTask> GetHistoryFromDatabase()
+        {
+            List<HallTask> tasks = new List<HallTask>();
+
+            string query = "SELECT Description, Status, CreatedAt FROM HallTasks ORDER BY CreatedAt DESC LIMIT 50";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        tasks.Add(new HallTask
+                        {
+                            Description = reader.GetString(0),
+                            Status = reader.GetString(1),
+                            CreatedAt = reader.GetDateTime(2)
+                        });
+                    }
+                }
+            }
+
+            return tasks;
         }
     }
 }
