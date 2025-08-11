@@ -8,13 +8,14 @@ namespace Online_Shop_Pet_Project
 {
     public static class CurrentUser
     {
+        public static int Id { get; set; }
         private static string username;
         private static bool isEmployee;
-
+        public static UserProfile Profile { get; set; }
         public static string Username
         {
             get => username;
-            set => username = value ?? throw new ArgumentNullException(nameof(value));
+            set => username = value; 
         }
 
         public static bool IsEmployee
@@ -25,8 +26,10 @@ namespace Online_Shop_Pet_Project
 
         public static void Clear()
         {
-            username = null;
-            isEmployee = false;
+            Id = 0;
+            Username = null;
+            IsEmployee = false;
+            Profile = null;
         }
     }
 }

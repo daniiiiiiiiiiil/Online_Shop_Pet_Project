@@ -206,7 +206,9 @@ namespace Online_Shop_Pet_Project
                 return;
             }
 
-            var (success, isEmployee) = DBManager.AuthenticateUser(login, password);
+            CurrentUser.Clear();
+
+            var (success, isEmployee, userId) = DBManager.AuthenticateUser(login, password);
 
             if (success)
             {
@@ -217,8 +219,10 @@ namespace Online_Shop_Pet_Project
                     return;
                 }
 
+                CurrentUser.Id = userId;
                 CurrentUser.Username = username;
                 CurrentUser.IsEmployee = isEmployee;
+                CurrentUser.Profile = DBManager.LoadUserProfile(userId);
 
                 var mainMenu = new MainMenuForm();
                 mainMenu.Show();

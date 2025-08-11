@@ -23,7 +23,6 @@ namespace Online_Shop_Pet_Project
             connection = new SQLiteConnection($"Data Source={dbPath};Version=3;");
             connection.Open();
 
-            // Создаем таблицу заказов, если она не существует
             string createOrdersTable = @"
                 CREATE TABLE IF NOT EXISTS HallOrders (
                     Id INTEGER PRIMARY KEY,
@@ -35,7 +34,6 @@ namespace Online_Shop_Pet_Project
                     UpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
                 )";
 
-            // Создаем таблицу истории заданий
             string createTasksTable = @"
                 CREATE TABLE IF NOT EXISTS HallTasks (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +54,6 @@ namespace Online_Shop_Pet_Project
                 command.ExecuteNonQuery();
             }
 
-            // Добавляем тестовые данные, если таблица пуста
             if (IsTableEmpty("HallOrders"))
             {
                 InsertSampleData();
@@ -122,7 +119,6 @@ namespace Online_Shop_Pet_Project
             };
             form.hallStaffOrdersPanel.Controls.Add(title);
 
-            // Получаем заказы из базы данных
             List<HallOrder> orders = GetOrdersFromDatabase();
 
             int yPos = 60;
@@ -183,7 +179,6 @@ namespace Online_Shop_Pet_Project
                 };
                 orderPanel.Controls.Add(statusLabel);
 
-                // Кнопки для управления статусом заказа
                 if (order.Status == "Поступил")
                 {
                     var startButton = new Button
@@ -290,7 +285,6 @@ namespace Online_Shop_Pet_Project
                 command.ExecuteNonQuery();
             }
 
-            // Добавляем запись в историю
             string description = $"Изменение статуса заказа #{orderId} на '{newStatus}'";
             string insertQuery = "INSERT INTO HallTasks (OrderId, Description, Status) VALUES (@OrderId, @Description, 'Выполнено')";
             using (var command = new SQLiteCommand(insertQuery, connection))
@@ -399,7 +393,6 @@ namespace Online_Shop_Pet_Project
             };
             form.hallStaffHistoryPanel.Controls.Add(title);
 
-            // Получаем историю из базы данных
             List<HallTask> historyItems = GetHistoryFromDatabase();
 
             int yPos = 60;

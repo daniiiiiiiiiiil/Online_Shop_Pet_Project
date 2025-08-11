@@ -17,5 +17,17 @@ namespace Online_Shop_Pet_Project
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
         public string DeliveryMethod { get; set; }
         public string PaymentMethod { get; set; }
+        public Order() { }
+
+        public Order(Order other)
+        {
+            this.Id = other.Id;
+            this.Date = other.Date;
+            this.Status = other.Status;
+            this.Total = other.Total;
+            this.DeliveryMethod = other.DeliveryMethod;
+            this.PaymentMethod = other.PaymentMethod;
+            this.Items = new List<OrderItem>(other.Items);
+        }
     }
 }

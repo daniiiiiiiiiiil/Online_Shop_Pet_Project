@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Online_Shop_Pet_Project
@@ -22,33 +22,25 @@ namespace Online_Shop_Pet_Project
         public void InitializeOrders()
         {
             form.orders = dbHelper.LoadOrders();
-            var order1 = new Order
+            if (form.orders.Count == 0)
             {
-                Id = 1001,
-                Date = DateTime.Now.AddDays(-5),
-                Status = "Доставлен",
-                Total = 83980,
-                Items = new List<OrderItem>
+                var testOrder = new Order
                 {
-                    new OrderItem { ProductId = 1, Quantity = 1, Price = 79990 },
-                    new OrderItem { ProductId = 5, Quantity = 1, Price = 899 }
-                }
-            };
-
-            var order2 = new Order
-            {
-                Id = 1002,
-                Date = DateTime.Now.AddDays(-2),
-                Status = "В пути",
-                Total = 3990,
-                Items = new List<OrderItem>
-                {
-                    new OrderItem { ProductId = 4, Quantity = 1, Price = 3990 }
-                }
-            };
-
-            form.orders.Add(order1);
-            form.orders.Add(order2);
+                    Id = 1001,
+                    Date = DateTime.Now.AddDays(-5),
+                    Status = "Доставлен",
+                    Total = 83980,
+                    DeliveryMethod = "Курьер",
+                    PaymentMethod = "Картой",
+                    Items = new List<OrderItem>
+                    {
+                        new OrderItem { ProductId = 1, Quantity = 1, Price = 79990, ProductName = "Смартфон Samsung Galaxy S23" },
+                        new OrderItem { ProductId = 5, Quantity = 1, Price = 899, ProductName = "Кофе зерновой Lavazza" }
+                    }
+                };
+                dbHelper.SaveOrder(testOrder);
+                form.orders.Add(testOrder);
+            }
         }
 
         public void ShowOrdersPanel()
@@ -98,71 +90,9 @@ namespace Online_Shop_Pet_Project
             else
             {
                 int yPos = 90;
-                foreach (var order in form.orders)
+                foreach (var order in form.orders.OrderByDescending(o => o.Date))
                 {
-                    var orderPanel = new Panel
-                    {
-                        Location = new Point(20, yPos),
-                        Size = new Size(form.ClientSize.Width - 40, 150),
-                        BorderStyle = BorderStyle.FixedSingle,
-                        BackColor = Color.White
-                    };
-
-                    var orderHeader = new Label
-                    {
-                        Text = $"Заказ #{order.Id} от {order.Date:dd.MM.yyyy}",
-                        Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                        ForeColor = Color.Black,
-                        AutoSize = true,
-                        Location = new Point(10, 10)
-                    };
-                    orderPanel.Controls.Add(orderHeader);
-
-                    var statusLabel = new Label
-                    {
-                        Text = $"Статус: {order.Status}",
-                        Font = new Font("Segoe UI", 10),
-                        ForeColor = form.UIHelper.GetStatusColor(order.Status),
-                        AutoSize = true,
-                        Location = new Point(300, 12)
-                    };
-                    orderPanel.Controls.Add(statusLabel);
-
-                    var totalLabel = new Label
-                    {
-                        Text = $"Сумма: {order.Total} ₽",
-                        Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                        ForeColor = Color.Black,
-                        AutoSize = true,
-                        Location = new Point(form.ClientSize.Width - 200, 12)
-                    };
-                    orderPanel.Controls.Add(totalLabel);
-
-                    var itemsList = new Label
-                    {
-                        Text = GetOrderItemsText(order),
-                        Font = new Font("Segoe UI", 9),
-                        ForeColor = Color.Gray,
-                        AutoSize = false,
-                        Size = new Size(form.ClientSize.Width - 80, 80),
-                        Location = new Point(10, 40)
-                    };
-                    orderPanel.Controls.Add(itemsList);
-
-                    var detailsButton = new Button
-                    {
-                        Text = "Подробнее",
-                        BackColor = Color.FromArgb(70, 130, 180),
-                        ForeColor = Color.White,
-                        FlatStyle = FlatStyle.Flat,
-                        Size = new Size(100, 30),
-                        Location = new Point(form.ClientSize.Width - 170, 110),
-                        Font = new Font("Segoe UI", 9)
-                    };
-                    detailsButton.Tag = order.Id;
-                    detailsButton.Click += (s, e) => ShowOrderDetails(order.Id);
-                    orderPanel.Controls.Add(detailsButton);
-
+                    var orderPanel = CreateOrderPanel(order, yPos);
                     form.ordersPanel.Controls.Add(orderPanel);
                     yPos += 160;
                 }
@@ -171,9 +101,76 @@ namespace Online_Shop_Pet_Project
             form.Controls.Add(form.ordersPanel);
         }
 
+        private Panel CreateOrderPanel(Order order, int yPos)
+        {
+            var orderPanel = new Panel
+            {
+                Location = new Point(20, yPos),
+                Size = new Size(form.ClientSize.Width - 40, 150),
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
+            };
+
+            var orderHeader = new Label
+            {
+                Text = $"Заказ #{order.Id} от {order.Date:dd.MM.yyyy}",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.Black,
+                AutoSize = true,
+                Location = new Point(10, 10)
+            };
+            orderPanel.Controls.Add(orderHeader);
+
+            var statusLabel = new Label
+            {
+                Text = $"Статус: {order.Status}",
+                Font = new Font("Segoe UI", 10),
+                ForeColor = form.UIHelper.GetStatusColor(order.Status),
+                AutoSize = true,
+                Location = new Point(300, 12)
+            };
+            orderPanel.Controls.Add(statusLabel);
+
+            var totalLabel = new Label
+            {
+                Text = $"Сумма: {order.Total} ₽",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.Black,
+                AutoSize = true,
+                Location = new Point(form.ClientSize.Width - 200, 12)
+            };
+            orderPanel.Controls.Add(totalLabel);
+
+            var itemsList = new Label
+            {
+                Text = GetOrderItemsText(order),
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.Gray,
+                AutoSize = false,
+                Size = new Size(form.ClientSize.Width - 80, 80),
+                Location = new Point(10, 40)
+            };
+            orderPanel.Controls.Add(itemsList);
+
+            var detailsButton = new Button
+            {
+                Text = "Подробнее",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(form.ClientSize.Width - 170, 110),
+                Font = new Font("Segoe UI", 9)
+            };
+            detailsButton.Click += (s, e) => ShowOrderDetails(order.Id);
+            orderPanel.Controls.Add(detailsButton);
+
+            return orderPanel;
+        }
+
         public void ShowOrderDetails(int orderId)
         {
-            var order = form.orders.Find(o => o.Id == orderId);
+            var order = form.orders.FirstOrDefault(o => o.Id == orderId);
             if (order == null) return;
 
             var detailsForm = new Form
@@ -183,114 +180,79 @@ namespace Online_Shop_Pet_Project
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
                 BackColor = Color.White,
-                MinimumSize = new Size(600, 400),
-                MaximumSize = new Size(600, 800)
+                Size = new Size(600, 500)
             };
 
             var headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 120,
-                BackColor = Color.FromArgb(240, 240, 240)
+                BackColor = Color.FromArgb(240, 240, 240),
+                Padding = new Padding(20)
             };
 
-            var orderNumberLabel = new Label
+            headerPanel.Controls.Add(new Label
             {
                 Text = $"Заказ #{order.Id}",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 ForeColor = Color.FromArgb(70, 130, 180),
                 AutoSize = true,
-                Location = new Point(20, 15)
-            };
-            headerPanel.Controls.Add(orderNumberLabel);
+                Location = new Point(0, 0)
+            });
 
-            var dateLabel = new Label
+            headerPanel.Controls.Add(new Label
             {
                 Text = $"Дата: {order.Date:dd.MM.yyyy HH:mm}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Black,
                 AutoSize = true,
-                Location = new Point(20, 45)
-            };
-            headerPanel.Controls.Add(dateLabel);
+                Location = new Point(0, 30)
+            });
 
-            var statusLabel = new Label
+            headerPanel.Controls.Add(new Label
             {
                 Text = $"Статус: {order.Status}",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = form.UIHelper.GetStatusColor(order.Status),
                 AutoSize = true,
-                Location = new Point(300, 15)
-            };
-            headerPanel.Controls.Add(statusLabel);
+                Location = new Point(300, 0)
+            });
 
-            var deliveryLabel = new Label
+            headerPanel.Controls.Add(new Label
             {
                 Text = $"Способ получения: {order.DeliveryMethod}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Black,
                 AutoSize = true,
-                Location = new Point(20, 70)
-            };
-            headerPanel.Controls.Add(deliveryLabel);
+                Location = new Point(0, 60)
+            });
 
-            var paymentLabel = new Label
+            headerPanel.Controls.Add(new Label
             {
                 Text = $"Способ оплаты: {order.PaymentMethod}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.Black,
                 AutoSize = true,
-                Location = new Point(300, 45)
-            };
-            headerPanel.Controls.Add(paymentLabel);
-
-            var separator = new Label
-            {
-                Text = "Состав заказа:",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.Black,
-                AutoSize = true,
-                Location = new Point(20, 95)
-            };
-            headerPanel.Controls.Add(separator);
-
-            detailsForm.Controls.Add(headerPanel);
+                Location = new Point(300, 30)
+            });
 
             var itemsPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.White,
-                Padding = new Padding(10)
-            };
-            var scrollPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
                 BackColor = Color.White
             };
 
-            var itemsContainer = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                Padding = new Padding(10),
-                BackColor = Color.White
-            };
-
-
+            int yPos = 10;
             foreach (var item in order.Items)
             {
-                var product = form.products.Find(p => p.Id == item.ProductId);
+                var product = form.products.FirstOrDefault(p => p.Id == item.ProductId);
                 if (product == null) continue;
 
                 var itemPanel = new Panel
                 {
-                    Size = new Size(550, 100),
-                    Margin = new Padding(0, 0, 0, 10), 
+                    Size = new Size(540, 100),
+                    Location = new Point(10, yPos),
                     BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.White
                 };
@@ -304,39 +266,26 @@ namespace Online_Shop_Pet_Project
                 };
                 itemPanel.Controls.Add(productImage);
 
-                var nameLabel = new Label
+                itemPanel.Controls.Add(new Label
                 {
                     Text = product.Name,
                     Font = new Font("Segoe UI", 10, FontStyle.Bold),
                     ForeColor = Color.Black,
-                    AutoSize = false,
                     Size = new Size(300, 20),
                     Location = new Point(100, 15)
-                };
-                itemPanel.Controls.Add(nameLabel);
+                });
 
-                var priceLabel = new Label
+                itemPanel.Controls.Add(new Label
                 {
                     Text = $"{item.Price} ₽ x {item.Quantity} = {item.Price * item.Quantity} ₽",
                     Font = new Font("Segoe UI", 10),
                     ForeColor = Color.Black,
                     AutoSize = true,
                     Location = new Point(100, 40)
-                };
-                itemPanel.Controls.Add(priceLabel);
+                });
 
-                var descLabel = new Label
-                {
-                    Text = product.Description,
-                    Font = new Font("Segoe UI", 9),
-                    ForeColor = Color.Gray,
-                    AutoSize = false,
-                    Size = new Size(300, 40),
-                    Location = new Point(100, 60)
-                };
-                itemPanel.Controls.Add(descLabel);
-
-                itemsContainer.Controls.Add(itemPanel);
+                itemsPanel.Controls.Add(itemPanel);
+                yPos += 110;
             }
 
             var totalPanel = new Panel
@@ -346,83 +295,64 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
-            var totalLabel = new Label
+            totalPanel.Controls.Add(new Label
             {
                 Text = $"Итого: {order.Total} ₽",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 ForeColor = Color.FromArgb(70, 130, 180),
                 AutoSize = true,
                 Location = new Point(400, 20)
-            };
-            totalPanel.Controls.Add(totalLabel);
+            });
 
-            scrollPanel.Controls.Add(itemsContainer);
-            detailsForm.Controls.Add(scrollPanel);
-            detailsForm.Controls.Add(totalPanel);
             detailsForm.Controls.Add(headerPanel);
-
-            int totalHeight = headerPanel.Height + totalPanel.Height;
-            int itemsHeight = order.Items.Count * 110; 
-            int maxHeight = Math.Min(800, totalHeight + itemsHeight + 40); 
-
-            detailsForm.Height = maxHeight;
-            detailsForm.StartPosition = FormStartPosition.CenterParent;
+            detailsForm.Controls.Add(itemsPanel);
+            detailsForm.Controls.Add(totalPanel);
 
             detailsForm.ShowDialog();
         }
+
         public string GetOrderItemsText(Order order)
         {
-            var itemsText = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (var item in order.Items)
             {
-                var product = form.products.Find(p => p.Id == item.ProductId);
-                if (product != null)
-                {
-                    itemsText.AppendLine($"{product.Name} - {item.Quantity} x {item.Price} ₽ = {item.Quantity * item.Price} ₽");
-                }
+                var product = form.products.FirstOrDefault(p => p.Id == item.ProductId);
+                sb.AppendLine($"{product?.Name ?? "Товар"} - {item.Quantity} x {item.Price} ₽");
             }
-            return itemsText.ToString().Trim();
+            return sb.ToString();
         }
 
         public void ConfirmOrder()
         {
+            if (form.currentOrder.Items.Count == 0)
+            {
+                MessageBox.Show("Корзина пуста!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             form.currentOrder.Id = new Random().Next(1000, 9999);
             form.currentOrder.Date = DateTime.Now;
             form.currentOrder.Status = "В обработке";
-            form.currentOrder.Total = 0;
+            form.currentOrder.Total = form.currentOrder.Items.Sum(i => i.Price * i.Quantity);
             form.currentOrder.DeliveryMethod = form.deliveryMethod;
             form.currentOrder.PaymentMethod = form.paymentMethod;
-
-            foreach (var item in form.currentOrder.Items)
-            {
-                form.currentOrder.Total += item.Price * item.Quantity;
-            }
 
             dbHelper.SaveOrder(form.currentOrder);
 
             dbHelper.ClearCart();
-
-            form.orders.Insert(0, new Order
-            {
-                Id = form.currentOrder.Id,
-                Date = form.currentOrder.Date,
-                Status = form.currentOrder.Status,
-                Total = form.currentOrder.Total,
-                Items = new List<OrderItem>(form.currentOrder.Items),
-                DeliveryMethod = form.currentOrder.DeliveryMethod,
-                PaymentMethod = form.currentOrder.PaymentMethod
-            });
-
             form.currentOrder.Items.Clear();
 
-            MessageBox.Show($"Заказ #{form.currentOrder.Id} успешно оформлен!\n" +
-                          $"Способ получения: {form.deliveryMethod}\n" +
-                          $"Способ оплаты: {form.paymentMethod}",
-                          "Оформление заказа", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            form.deliveryPanel.Visible = false;
+            form.orders.Insert(0, new Order(form.currentOrder));
             ShowOrdersPanel();
+
+            MessageBox.Show(
+                $"Заказ #{form.currentOrder.Id} оформлен!\n" +
+                $"Сумма: {form.currentOrder.Total} ₽\n" +
+                $"Статус: {form.currentOrder.Status}",
+                "Успешно",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
         }
     }
-
 }

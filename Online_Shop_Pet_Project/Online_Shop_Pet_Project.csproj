@@ -94,6 +94,7 @@
     <Compile Include="DeliveryStatus.cs" />
     <Compile Include="DirectorHelper.cs" />
     <Compile Include="EmployeeHelper.cs" />
+    <Compile Include="EmployeeInfo.cs" />
     <Compile Include="EmployeeItem.cs" />
     <Compile Include="FaqQuestion.cs" />
     <Compile Include="FaqSection.cs" />

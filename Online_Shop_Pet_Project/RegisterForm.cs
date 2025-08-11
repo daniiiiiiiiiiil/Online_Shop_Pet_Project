@@ -412,12 +412,6 @@ namespace Online_Shop_Pet_Project
             string email = isEmail ? contact : null;
             string phone = isEmail ? null : contact;
 
-            if (DBManager.UserExists(username, email))
-            {
-                MessageBox.Show("Пользователь с такими данными уже существует", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
             bool success;
             if (isEmployeeRegistration)
             {
@@ -443,10 +437,6 @@ namespace Online_Shop_Pet_Project
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();
-            }
-            else
-            {
-                MessageBox.Show("Ошибка при регистрации. Пожалуйста, попробуйте снова.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

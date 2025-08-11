@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Online_Shop_Pet_Project
@@ -11,17 +10,63 @@ namespace Online_Shop_Pet_Project
     public class CartHelper
     {
         private MainMenuForm form;
-        private DatabaseHelper dbHelper;
+        private SQLiteConnection connection;
 
         public CartHelper(MainMenuForm form)
         {
             this.form = form;
-            this.dbHelper = new DatabaseHelper();
+            this.connection = new SQLiteConnection("Data Source=online_shop.db;Version=3;");
+            InitializeCartTable();
+        }
+
+        private void InitializeCartTable()
+        {
+            connection.Open();
+
+            string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS CartItems (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    UserId INTEGER NOT NULL,
+                    ProductId INTEGER NOT NULL,
+                    Quantity INTEGER NOT NULL,
+                    Price DECIMAL NOT NULL,
+                    ProductName TEXT,
+                    FOREIGN KEY (UserId) REFERENCES Users(Id),
+                    FOREIGN KEY (ProductId) REFERENCES Products(Id),
+                    UNIQUE(UserId, ProductId)
+                )";
+
+            using (var command = new SQLiteCommand(createTableQuery, connection))
+            {
+                command.ExecuteNonQuery();
+            }
         }
 
         public void LoadCart()
         {
-            form.currentOrder.Items = dbHelper.LoadCartItems();
+            form.currentOrder.Items.Clear();
+
+            string query = "SELECT * FROM CartItems WHERE UserId = @UserId";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var item = new OrderItem
+                        {
+                            ProductId = Convert.ToInt32(reader["ProductId"]),
+                            Quantity = Convert.ToInt32(reader["Quantity"]),
+                            Price = Convert.ToDecimal(reader["Price"]),
+                            ProductName = reader["ProductName"].ToString()
+                        };
+
+                        form.currentOrder.Items.Add(item);
+                    }
+                }
+            }
 
             foreach (var item in form.currentOrder.Items)
             {
@@ -30,15 +75,60 @@ namespace Online_Shop_Pet_Project
                 {
                     item.ProductName = product.Name;
                     item.Price = product.Price;
+                    UpdateCartItemInDatabase(item);
                 }
+            }
+        }
+
+        public void SaveCartItems(List<OrderItem> items)
+        {
+            string deleteQuery = "DELETE FROM CartItems WHERE UserId = @UserId";
+            using (var command = new SQLiteCommand(deleteQuery, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+                command.ExecuteNonQuery();
+            }
+
+            foreach (var item in items)
+            {
+                string insertQuery = @"
+                    INSERT INTO CartItems (UserId, ProductId, Quantity, Price, ProductName)
+                    VALUES (@UserId, @ProductId, @Quantity, @Price, @ProductName)";
+
+                using (var command = new SQLiteCommand(insertQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+                    command.Parameters.AddWithValue("@ProductId", item.ProductId);
+                    command.Parameters.AddWithValue("@Quantity", item.Quantity);
+                    command.Parameters.AddWithValue("@Price", item.Price);
+                    command.Parameters.AddWithValue("@ProductName", item.ProductName);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void UpdateCartItemInDatabase(OrderItem item)
+        {
+            string query = @"
+                UPDATE CartItems 
+                SET Price = @Price, ProductName = @ProductName
+                WHERE UserId = @UserId AND ProductId = @ProductId";
+
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+                command.Parameters.AddWithValue("@ProductId", item.ProductId);
+                command.Parameters.AddWithValue("@Price", item.Price);
+                command.Parameters.AddWithValue("@ProductName", item.ProductName);
+                command.ExecuteNonQuery();
             }
         }
 
         public void ShowCartPanel()
         {
-            dbHelper.SaveCartItems(form.currentOrder.Items);
-
+            SaveCartItems(form.currentOrder.Items);
             form.UIHelper.ClearPanels();
+
             form.cartPanel = new Panel
             {
                 Location = new Point(0, 0),
@@ -233,9 +323,12 @@ namespace Online_Shop_Pet_Project
                 if (item.Quantity <= 0)
                 {
                     form.currentOrder.Items.Remove(item);
+                    RemoveFromCart(productId);
                 }
-
-                dbHelper.SaveCartItems(form.currentOrder.Items);
+                else
+                {
+                    SaveCartItems(form.currentOrder.Items);
+                }
 
                 ShowCartPanel();
             }
@@ -243,15 +336,33 @@ namespace Online_Shop_Pet_Project
 
         public void RemoveFromCart(int productId)
         {
+            string query = "DELETE FROM CartItems WHERE UserId = @UserId AND ProductId = @ProductId";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+                command.Parameters.AddWithValue("@ProductId", productId);
+                command.ExecuteNonQuery();
+            }
+
             var item = form.currentOrder.Items.Find(i => i.ProductId == productId);
             if (item != null)
             {
                 form.currentOrder.Items.Remove(item);
-
-                dbHelper.SaveCartItems(form.currentOrder.Items);
-
-                ShowCartPanel();
             }
+
+            ShowCartPanel();
+        }
+
+        public void ClearCart()
+        {
+            string query = "DELETE FROM CartItems WHERE UserId = @UserId";
+            using (var command = new SQLiteCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", CurrentUser.Id);
+                command.ExecuteNonQuery();
+            }
+
+            form.currentOrder.Items.Clear();
         }
     }
 }

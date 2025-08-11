@@ -11,6 +11,7 @@ namespace Online_Shop_Pet_Project
 {
     public partial class MainMenuForm : Form
     {
+        
         public bool isEmployee;
         public string userRole;
         private DatabaseHelper dbHelper;
@@ -28,11 +29,15 @@ namespace Online_Shop_Pet_Project
 
         public UserProfile userProfile = new UserProfile
         {
-            Name = "Иван Иванов",
-            Phone = "+7 (123) 456-78-90",
-            Email = "ivan.ivanov@example.com",
-            Password = "********",
-            PhotoPath = "E:\\с#\\Online_Shop_Pet_Project\\Online_Shop_Pet_Project\\art\\Person.png"
+            Id = CurrentUser.Id,
+            Name = CurrentUser.Profile?.Name ?? "Гость",
+            Phone = CurrentUser.Profile?.Phone ?? "+7 (xxx) xxx-xx-xx",
+            Email = CurrentUser.Profile?.Email ?? "email@example.com",
+            Password = "********", 
+            PhotoPath = CurrentUser.Profile?.PhotoPath ?? "default_profile.png",
+            IsEmployee = CurrentUser.IsEmployee,
+            Address = CurrentUser.Profile?.Address ?? "",
+            PaymentMethod = CurrentUser.Profile?.PaymentMethod ?? "Не указан"
         };
 
         public ProductHelper ProductHelper;
