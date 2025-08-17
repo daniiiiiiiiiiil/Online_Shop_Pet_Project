@@ -13,6 +13,7 @@ namespace Online_Shop_Pet_Project
         public string Subject { get; set; }
         public DateTime CreatedDate { get; set; }
         public string Status { get; set; }
+        public string CustomerName { get; set; }
         public List<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     }
 }

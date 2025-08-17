@@ -18,7 +18,8 @@ namespace Online_Shop_Pet_Project
         public Panel productsPanel, productDetailsPanel, ordersPanel, cartPanel, deliveryPanel, profilePanel,
             deliveriesPanel, routePanel, earningsPanel, cookOrdersPanel, cookMenuPanel, ingredientsPanel,
             hallStaffOrdersPanel, storeMapPanel, hallStaffHistoryPanel, helpPanel, ticketsPanel, historyPanel,
-            offlineOrderPanel, returnPanel, chatPanel, complaintsPanel, chatSupportPanel, knowledgePanel, mainPanel, ingredientHistoryPanel, orderHistoryPanel;
+            offlineOrderPanel, returnPanel, chatPanel, complaintsPanel, chatSupportPanel, knowledgePanel, mainPanel,
+            ingredientHistoryPanel, orderHistoryPanel;
 
         public ChatTicket currentChat;
         public List<Product> products = new List<Product>();
@@ -26,6 +27,7 @@ namespace Online_Shop_Pet_Project
         public Order currentOrder = new Order();
         public string deliveryMethod = "Самовывоз";
         public string paymentMethod = "Сразу";
+        public bool isSupportMode { get; set; } = false;
 
         public UserProfile userProfile = new UserProfile
         {
@@ -51,6 +53,7 @@ namespace Online_Shop_Pet_Project
         public CookHelper CookHelper;
         public HallStaffHelper HallStaffHelper;
         public SellerHelper SellerHelper;
+        public SupportHelper supportHelper;
 
         public MainMenuForm()
         {
@@ -68,6 +71,7 @@ namespace Online_Shop_Pet_Project
             CookHelper = new CookHelper(this);
             HallStaffHelper = new HallStaffHelper(this);
             SellerHelper = new SellerHelper(this);
+            supportHelper = new SupportHelper(this);
 
             products = new List<Product>();
             orders = new List<Order>();

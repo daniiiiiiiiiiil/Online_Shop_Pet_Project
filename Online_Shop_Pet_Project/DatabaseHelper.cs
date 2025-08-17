@@ -73,7 +73,69 @@ namespace Online_Shop_Pet_Project
                     ProductName TEXT,
                     FOREIGN KEY (ProductId) REFERENCES Products(Id)
                 )";
+                string createChatMessagesTable = @"
+                CREATE TABLE IF NOT EXISTS ChatMessages (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ChatId INTEGER NOT NULL,
+                    Sender TEXT NOT NULL,
+                    Message TEXT NOT NULL,
+                    Timestamp TEXT NOT NULL,
+                    IsSupport INTEGER DEFAULT 0,
+                    IsRead INTEGER DEFAULT 0,
+                    CustomerName TEXT
+                )";
+                                string createComplaintsTable = @"
+                CREATE TABLE IF NOT EXISTS Complaints (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CustomerName TEXT NOT NULL,
+                    CustomerPhone TEXT,
+                    Subject TEXT NOT NULL,
+                    Message TEXT NOT NULL,
+                    OrderId INTEGER,
+                    Status TEXT DEFAULT 'Новая',
+                    Response TEXT,
+                    CreatedDate TEXT NOT NULL,
+                    ResolvedDate TEXT
+                )";
 
+                                string createSupportTicketsTable = @"
+                CREATE TABLE IF NOT EXISTS SupportTickets (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Subject TEXT NOT NULL,
+                    Category TEXT NOT NULL,
+                    Priority TEXT NOT NULL,
+                    Description TEXT NOT NULL,
+                    Answer TEXT,
+                    CreatedDate TEXT NOT NULL,
+                    CustomerName TEXT NOT NULL
+                )";
+
+                                string createKnowledgeBaseTable = @"
+                CREATE TABLE IF NOT EXISTS KnowledgeBase (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Title TEXT NOT NULL,
+                    Content TEXT NOT NULL,
+                    Category TEXT NOT NULL
+)";
+
+                using (var command = new SQLiteCommand(createComplaintsTable, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+
+                using (var command = new SQLiteCommand(createSupportTicketsTable, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+
+                using (var command = new SQLiteCommand(createKnowledgeBaseTable, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+                using (var command = new SQLiteCommand(createChatMessagesTable, connection))
+                {
+                    command.ExecuteNonQuery();
+                }
                 using (var command = new SQLiteCommand(createProductsTable, connection))
                 {
                     command.ExecuteNonQuery();
@@ -422,3 +484,4 @@ namespace Online_Shop_Pet_Project
         }
     }
 }
+

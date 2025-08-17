@@ -25,7 +25,6 @@ namespace Online_Shop_Pet_Project
             connection = new SQLiteConnection("Data Source=online_shop.db;Version=3;");
             connection.Open();
 
-            // Создаем таблицу Users, если она не существует
             using (var cmd = new SQLiteCommand(
                 @"CREATE TABLE IF NOT EXISTS Users (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -281,7 +280,6 @@ namespace Online_Shop_Pet_Project
             int buttonWidth = (sectionsPanel.Width - 60) / 3;
             int buttonHeight = 60;
 
-            // Кнопка "Ответ на заявку" (только для сотрудников)
             if (form.userProfile.IsEmployee)
             {
                 var answerSupportBtn = new Button
@@ -298,7 +296,6 @@ namespace Online_Shop_Pet_Project
                 sectionsPanel.Controls.Add(answerSupportBtn);
             }
 
-            // Кнопка "Чат с тех поддержкой"
             var chatSupportBtn = new Button
             {
                 Text = "Чат с тех поддержкой",
@@ -312,7 +309,6 @@ namespace Online_Shop_Pet_Project
             chatSupportBtn.Click += (s, e) => form.SupportHelper.ShowChatWithSupport();
             sectionsPanel.Controls.Add(chatSupportBtn);
 
-            // Кнопка "Способ оплаты"
             var paymentMethodBtn = new Button
             {
                 Text = "Способ оплаты",
@@ -326,10 +322,9 @@ namespace Online_Shop_Pet_Project
             paymentMethodBtn.Click += (s, e) => ShowPaymentMethodForm();
             sectionsPanel.Controls.Add(paymentMethodBtn);
 
-            // Кнопка "Часто задаваемые вопросы"
             var supportQuestionsBtn = new Button
             {
-                Text = "Часто задаваемые вопросы",
+                Text = "Ответы на вопросы и заявки",
                 BackColor = Color.FromArgb(240, 240, 240),
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat,
@@ -340,7 +335,6 @@ namespace Online_Shop_Pet_Project
             supportQuestionsBtn.Click += (s, e) => form.SupportHelper.ShowSupportHelpPanel();
             sectionsPanel.Controls.Add(supportQuestionsBtn);
 
-            // Кнопка "Подать заявку"
             var supportTicketBtn = new Button
             {
                 Text = "Подать заявку",
@@ -354,7 +348,6 @@ namespace Online_Shop_Pet_Project
             supportTicketBtn.Click += (s, e) => form.SupportHelper.ShowNewTicketForm();
             sectionsPanel.Controls.Add(supportTicketBtn);
 
-            // Кнопка "История заказов"
             var ordersHistoryBtn = new Button
             {
                 Text = "История заказов",
@@ -368,12 +361,10 @@ namespace Online_Shop_Pet_Project
             ordersHistoryBtn.Click += (s, e) => form.OrderHelper.ShowOrdersPanel();
             sectionsPanel.Controls.Add(ordersHistoryBtn);
 
-            // Добавляем панель сотрудника, если пользователь - сотрудник
             if (form.userProfile.IsEmployee)
             {
                 var employeeStats = GetEmployeeStats(form.userProfile.Id);
 
-                // Проверяем, что employeeStats не null
                 if (employeeStats != null)
                 {
                     var employeePanel = new Panel
@@ -394,7 +385,6 @@ namespace Online_Shop_Pet_Project
                     };
                     employeePanel.Controls.Add(employeeTitle);
 
-                    // Добавляем проверку на null для каждого поля
                     var positionLabel = new Label
                     {
                         Text = $"Должность: {employeeStats.Position ?? "Не указана"}",
@@ -443,6 +433,7 @@ namespace Online_Shop_Pet_Project
             form.profilePanel.Controls.Add(profileContainer);
             form.Controls.Add(form.profilePanel);
         }
+
         private void ShowSupportResponseForm()
         {
             var responseForm = new Form
@@ -591,7 +582,6 @@ namespace Online_Shop_Pet_Project
         {
             try
             {
-                // Проверяем существование таблицы Users
                 using (var checkCmd = new SQLiteCommand(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='Users'", connection))
                 {
@@ -599,7 +589,6 @@ namespace Online_Shop_Pet_Project
 
                     if (!tableExists)
                     {
-                        // Если таблицы нет, создаем ее
                         using (var createCmd = new SQLiteCommand(
                             @"CREATE TABLE Users (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -617,7 +606,6 @@ namespace Online_Shop_Pet_Project
                     }
                 }
 
-                // Обновляем способ оплаты
                 using (var cmd = new SQLiteCommand(
                     @"UPDATE Users 
               SET PaymentMethod = @PaymentMethod
@@ -628,7 +616,6 @@ namespace Online_Shop_Pet_Project
                     cmd.ExecuteNonQuery();
                 }
 
-                // Обновляем профиль в памяти
                 form.userProfile.PaymentMethod = paymentMethod;
             }
             catch (Exception ex)
@@ -666,7 +653,6 @@ namespace Online_Shop_Pet_Project
 
         private EmployeeStats GetEmployeeStats(int userId)
         {
-            // Если пользователь не сотрудник - сразу возвращаем null
             if (!form.userProfile.IsEmployee)
                 return null;
 
@@ -698,7 +684,6 @@ namespace Online_Shop_Pet_Project
                 MessageBox.Show($"Ошибка загрузки данных сотрудника: {ex.Message}");
             }
 
-            // Возвращаем объект с значениями по умолчанию, если запись не найдена
             return new EmployeeStats
             {
                 Position = "Новый сотрудник",
@@ -730,13 +715,5 @@ namespace Online_Shop_Pet_Project
                 }
             }
         }
-    }
-
-    public class EmployeeStats
-    {
-        public string Position { get; set; }
-        public decimal Salary { get; set; }
-        public int ShiftsWorked { get; set; }
-        public decimal TotalEarned { get; set; }
     }
 }

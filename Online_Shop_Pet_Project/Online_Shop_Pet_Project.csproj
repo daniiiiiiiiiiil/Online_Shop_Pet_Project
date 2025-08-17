@@ -96,6 +96,7 @@
     <Compile Include="EmployeeHelper.cs" />
     <Compile Include="EmployeeInfo.cs" />
     <Compile Include="EmployeeItem.cs" />
+    <Compile Include="EmployeeStats.cs" />
     <Compile Include="FaqQuestion.cs" />
     <Compile Include="FaqSection.cs" />
     <Compile Include="HallOrder.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="IngredientRequest.cs" />
     <Compile Include="IngredientRequirement.cs" />
     <Compile Include="KitchenOrder.cs" />
+    <Compile Include="KnowledgeArticle.cs" />
     <Compile Include="KnowledgeCategory.cs" />
     <Compile Include="LoginForm.cs">
       <SubType>Form</SubType>

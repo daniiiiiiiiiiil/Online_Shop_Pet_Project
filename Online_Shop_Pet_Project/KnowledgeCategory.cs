@@ -9,6 +9,6 @@ namespace Online_Shop_Pet_Project
     public class KnowledgeCategory
     {
         public string Name { get; set; }
-        public List<string> Articles { get; set; }
+        public List<KnowledgeArticle> Articles { get; set; }
     }
 }

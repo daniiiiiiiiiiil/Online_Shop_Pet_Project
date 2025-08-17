@@ -12,6 +12,7 @@ namespace Online_Shop_Pet_Project
         public string CustomerName { get; set; }
         public string LastMessage { get; set; }
         public DateTime LastMessageTime { get; set; }
+        public DateTime LastActivity {  get; set; }
         public int UnreadCount { get; set; }
     }
 }
