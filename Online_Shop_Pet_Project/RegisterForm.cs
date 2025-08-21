@@ -412,22 +412,26 @@ namespace Online_Shop_Pet_Project
             string email = isEmail ? contact : null;
             string phone = isEmail ? null : contact;
 
+            int userId;
             bool success;
+
             if (isEmployeeRegistration)
             {
-                success = DBManager.RegisterUser(username, email, phone, password, true, employeeDocumentsPath, employeePhotoPath);
+                success = DBManager.RegisterUser(username, email, phone, password, true, employeeDocumentsPath, employeePhotoPath, out userId);
             }
             else
             {
-                success = DBManager.RegisterUser(username, email, phone, password, false, null, string.IsNullOrEmpty(customerPhotoPath) ? null : customerPhotoPath);
+                success = DBManager.RegisterUser(username, email, phone, password, false, null, string.IsNullOrEmpty(customerPhotoPath) ? null : customerPhotoPath, out userId);
             }
 
             if (success)
             {
                 IsEmployee = isEmployeeRegistration;
 
+                CurrentUser.Id = userId;
                 CurrentUser.Username = username;
                 CurrentUser.IsEmployee = isEmployeeRegistration;
+                CurrentUser.Profile = DBManager.LoadUserProfile(userId);
 
                 MessageBox.Show(
                     IsEmployee ? "Регистрация сотрудника выполнена успешно!" : "Регистрация покупателя выполнена успешно!",

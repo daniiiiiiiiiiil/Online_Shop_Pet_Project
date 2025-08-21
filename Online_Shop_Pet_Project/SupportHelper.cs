@@ -38,7 +38,6 @@ namespace Online_Shop_Pet_Project
                 stream = client.GetStream();
                 isConnected = true;
 
-                // Запускаем поток для получения сообщений
                 Task.Run(() => ReceiveMessages());
             }
             catch (Exception ex)
@@ -106,7 +105,6 @@ namespace Online_Shop_Pet_Project
                     byte[] data = Encoding.UTF8.GetBytes(message);
                     stream.Write(data, 0, data.Length);
 
-                    // Сохраняем сообщение в базу данных
                     var chatMessage = new ChatMessage
                     {
                         Sender = form.userProfile.Name,
@@ -118,7 +116,6 @@ namespace Online_Shop_Pet_Project
 
                     SaveChatMessage(form.currentChat.Id, chatMessage);
 
-                    // Добавляем в текущий чат
                     form.currentChat.Messages.Add(chatMessage);
                 }
                 catch (Exception ex)
@@ -153,10 +150,8 @@ namespace Online_Shop_Pet_Project
                 };
             }
 
-            // Загружаем историю из базы данных
             form.currentChat.Messages = LoadChatMessages(form.currentChat.Id);
 
-            // Если нет сообщений, добавляем приветствие от поддержки
             if (form.currentChat.Messages.Count == 0)
             {
                 form.currentChat.Messages.Add(new ChatMessage
@@ -180,10 +175,41 @@ namespace Online_Shop_Pet_Project
         {
             form.UIHelper.ClearPanels();
 
-            form.helpPanel = new Panel
+            var mainContainer = new Panel
             {
                 Location = new Point(0, 0),
                 Size = new Size(form.ClientSize.Width, form.ClientSize.Height - 60),
+                BackColor = Color.White
+            };
+
+            var headerPanel = new Panel
+            {
+                Location = new Point(0, 0),
+                Size = new Size(form.ClientSize.Width, 50),
+                BackColor = Color.White,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            var profileButton = new Button
+            {
+                Text = "👤 Профиль",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(form.ClientSize.Width - 120, 10),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            profileButton.FlatAppearance.BorderSize = 0;
+            profileButton.Click += (s, e) => form.ProfileHelper.ShowProfilePanel();
+            headerPanel.Controls.Add(profileButton);
+
+            form.helpPanel = new Panel
+            {
+                Location = new Point(0, 50),
+                Size = new Size(form.ClientSize.Width, form.ClientSize.Height - 110),
                 AutoScroll = true,
                 BackColor = Color.White
             };
@@ -218,33 +244,33 @@ namespace Online_Shop_Pet_Project
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Size = new Size(250, 50),
-                Location = new Point(20, 550),
+                Location = new Point(20, 560),
                 Font = new Font("Segoe UI", 12)
             };
             ticketsButton.Click += (s, e) => ShowUserTicketsPanel();
             form.helpPanel.Controls.Add(ticketsButton);
 
             var faqSections = new List<FaqSection>
+    {
+        new FaqSection
+        {
+            Title = "Общие вопросы",
+            Questions = new List<FaqQuestion>
             {
-                new FaqSection
-                {
-                    Title = "Общие вопросы",
-                    Questions = new List<FaqQuestion>
-                    {
-                        new FaqQuestion { Question = "Как изменить пароль?", Answer = "Перейдите в профиль -> Личная информация -> Пароль" },
-                        new FaqQuestion { Question = "Где найти историю заказов?", Answer = "В разделе 'Заказы' или в профиле" }
-                    }
-                },
-                new FaqSection
-                {
-                    Title = "Технические проблемы",
-                    Questions = new List<FaqQuestion>
-                    {
-                        new FaqQuestion { Question = "Не сканируется штрих-код", Answer = "Проверьте чистоту сканера и качество печати кода" },
-                        new FaqQuestion { Question = "Система зависает", Answer = "Попробуйте перезапустить приложение. Если не помогает - создайте заявку в техподдержку" }
-                    }
-                }
-            };
+                new FaqQuestion { Question = "Как изменить пароль?", Answer = "Перейдите в профиль -> Личная информация -> Пароль" },
+                new FaqQuestion { Question = "Где найти историю заказов?", Answer = "В разделе 'Заказы' или в профиле" }
+            }
+        },
+        new FaqSection
+        {
+            Title = "Технические проблемы",
+            Questions = new List<FaqQuestion>
+            {
+                new FaqQuestion { Question = "Не сканируется штрих-код", Answer = "Проверьте чистоту сканера и качество печати кода" },
+                new FaqQuestion { Question = "Система зависает", Answer = "Попробуйте перезапустить приложение. Если не помогает - создайте заявку в техподдержку" }
+            }
+        }
+    };
 
             int yPos = 60;
             foreach (var section in faqSections)
@@ -293,8 +319,12 @@ namespace Online_Shop_Pet_Project
                 }
             }
 
-            form.Controls.Add(form.helpPanel);
+            mainContainer.Controls.Add(headerPanel);
+            mainContainer.Controls.Add(form.helpPanel);
+
+            form.Controls.Add(mainContainer);
         }
+
 
         public void ShowTicketDetails(int ticketId)
         {
@@ -309,7 +339,6 @@ namespace Online_Shop_Pet_Project
                 MaximizeBox = false
             };
 
-            // Основные метки
             var titleLabel = new Label
             {
                 Text = ticket.Title,
@@ -326,7 +355,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Информационная панель
             var infoPanel = new Panel
             {
                 Location = new Point(20, 80),
@@ -352,7 +380,6 @@ namespace Online_Shop_Pet_Project
 
             infoPanel.Controls.AddRange(new Control[] { categoryLabel, priorityLabel });
 
-            // Описание
             var descriptionLabel = new Label
             {
                 Text = "Описание:",
@@ -372,7 +399,6 @@ namespace Online_Shop_Pet_Project
                 BorderStyle = BorderStyle.FixedSingle
             };
 
-            // Статус (отдельно, так как он может меняться)
             var statusLabel = new Label
             {
                 Text = $"Статус: {ticket.Status}",
@@ -381,7 +407,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Кнопка закрытия
             var closeButton = new Button
             {
                 Text = "Закрыть",
@@ -429,7 +454,6 @@ namespace Online_Shop_Pet_Project
         }
         public void ShowNewTicketForm()
         {
-            // Создаем форму для новой заявки
             Form newTicketForm = new Form()
             {
                 Text = "Новая заявка в поддержку",
@@ -440,7 +464,6 @@ namespace Online_Shop_Pet_Project
                 MinimizeBox = false
             };
 
-            // Поле для заголовка заявки
             Label titleLabel = new Label()
             {
                 Text = "Заголовок:",
@@ -454,7 +477,6 @@ namespace Online_Shop_Pet_Project
                 Size = new Size(350, 20)
             };
 
-            // Выбор категории
             Label categoryLabel = new Label()
             {
                 Text = "Категория:",
@@ -471,7 +493,6 @@ namespace Online_Shop_Pet_Project
             categoryComboBox.Items.AddRange(new string[] { "Техническая", "Финансовая", "Учетная запись", "Другое" });
             categoryComboBox.SelectedIndex = 0;
 
-            // Выбор приоритета
             Label priorityLabel = new Label()
             {
                 Text = "Приоритет:",
@@ -488,7 +509,6 @@ namespace Online_Shop_Pet_Project
             priorityComboBox.Items.AddRange(new string[] { "Низкий", "Средний", "Высокий", "Критический" });
             priorityComboBox.SelectedIndex = 1;
 
-            // Поле для описания
             Label descriptionLabel = new Label()
             {
                 Text = "Описание:",
@@ -504,7 +524,6 @@ namespace Online_Shop_Pet_Project
                 ScrollBars = ScrollBars.Vertical
             };
 
-            // Кнопки
             Button createButton = new Button()
             {
                 Text = "Создать",
@@ -521,7 +540,6 @@ namespace Online_Shop_Pet_Project
                 Size = new Size(80, 30)
             };
 
-            // Обработчики событий
             createButton.Click += (sender, e) =>
             {
                 if (string.IsNullOrWhiteSpace(titleTextBox.Text))
@@ -538,7 +556,6 @@ namespace Online_Shop_Pet_Project
                     return;
                 }
 
-                // Сохраняем заявку в базу данных
                 try
                 {
                     SaveSupportTicketToDatabase(
@@ -561,7 +578,6 @@ namespace Online_Shop_Pet_Project
 
             cancelButton.Click += (sender, e) => newTicketForm.Close();
 
-            // Добавляем элементы на форму
             newTicketForm.Controls.Add(titleLabel);
             newTicketForm.Controls.Add(titleTextBox);
             newTicketForm.Controls.Add(categoryLabel);
@@ -573,11 +589,9 @@ namespace Online_Shop_Pet_Project
             newTicketForm.Controls.Add(createButton);
             newTicketForm.Controls.Add(cancelButton);
 
-            // Показываем форму
             newTicketForm.ShowDialog();
         }
 
-        // Пример использования при обработке заявки
         public void ProcessTicket(int ticketId, string answer)
         {
             using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
@@ -652,11 +666,9 @@ namespace Online_Shop_Pet_Project
             };
             form.complaintsPanel.Controls.Add(title);
 
-            // Загружаем и жалобы, и заявки
             var complaints = LoadComplaintsFromDatabase();
             var tickets = LoadSupportTicketsFromDatabase();
 
-            // Объединяем в один список для отображения
             var allIssues = complaints.Concat(tickets.Select(t => new Complaint
             {
                 Id = t.Id,
@@ -827,7 +839,6 @@ namespace Online_Shop_Pet_Project
 
             var activeChats = LoadActiveChatsFromDatabase();
 
-            // Добавляем проверку на наличие чатов
             if (activeChats.Count == 0)
             {
                 var noChatsLabel = new Label
@@ -857,7 +868,6 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
-            // Выбираем первый чат (теперь мы уверены, что он есть)
             var selectedChat = activeChats[0];
             int yPos = 10;
 
@@ -927,7 +937,6 @@ namespace Online_Shop_Pet_Project
             {
                 if (!string.IsNullOrWhiteSpace(messageBox.Text))
                 {
-                    // Теперь мы уверены, что activeChats не пустой
                     SaveChatMessage(activeChats[0].Id, "Поддержка", messageBox.Text, true);
                     messageBox.Text = "";
                     ShowSupportChatPanel();
@@ -994,7 +1003,6 @@ namespace Online_Shop_Pet_Project
                     MessageBox.Show($"Новое сообщение от поддержки: {lastMessage.Text}",
                         "Новое сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    // Помечаем как прочитанное
                     MarkMessageAsRead(lastMessage.Id);
                 }
             }
@@ -1027,22 +1035,7 @@ namespace Online_Shop_Pet_Project
                 }
                 catch
                 {
-                    // Пробуем снова через 5 секунд
                     Task.Delay(5000).ContinueWith(t => CheckConnection());
-                }
-            }
-        }
-        private int GetUnreadMessagesCount(int chatId)
-        {
-            using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
-            {
-                connection.Open();
-                string query = "SELECT COUNT(*) FROM ChatMessages WHERE ChatId = @ChatId AND IsSupport = 0 AND IsRead = 0";
-
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@ChatId", chatId);
-                    return Convert.ToInt32(command.ExecuteScalar());
                 }
             }
         }
@@ -1074,7 +1067,6 @@ namespace Online_Shop_Pet_Project
                     }
                 }
 
-                // Помечаем сообщения как прочитанные
                 string updateQuery = "UPDATE ChatMessages SET IsRead = 1 WHERE ChatId = @ChatId AND IsSupport = 0";
                 using (var command = new SQLiteCommand(updateQuery, connection))
                 {
@@ -1183,7 +1175,6 @@ namespace Online_Shop_Pet_Project
             {
                 connection.Open();
 
-                // Загружаем категории
                 string categoryQuery = "SELECT DISTINCT Category FROM KnowledgeBase";
                 using (var command = new SQLiteCommand(categoryQuery, connection))
                 using (var reader = command.ExecuteReader())
@@ -1196,7 +1187,6 @@ namespace Online_Shop_Pet_Project
                             Articles = new List<KnowledgeArticle>()
                         };
 
-                        // Загружаем статьи для каждой категории
                         string articleQuery = "SELECT * FROM KnowledgeBase WHERE Category = @Category";
                         using (var articleCommand = new SQLiteCommand(articleQuery, connection))
                         {
@@ -1298,7 +1288,6 @@ namespace Online_Shop_Pet_Project
                 MaximizeBox = false
             };
 
-            // Заголовок жалобы
             var idLabel = new Label
             {
                 Text = $"Жалоба #{complaint.Id}",
@@ -1307,7 +1296,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Информация о клиенте
             var customerLabel = new Label
             {
                 Text = $"Клиент: {complaint.CustomerName}",
@@ -1332,7 +1320,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Тема жалобы
             var subjectLabel = new Label
             {
                 Text = $"Тема: {complaint.Subject}",
@@ -1341,7 +1328,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Сообщение клиента
             var messageLabel = new Label
             {
                 Text = "Сообщение клиента:",
@@ -1360,7 +1346,6 @@ namespace Online_Shop_Pet_Project
                 ScrollBars = ScrollBars.Vertical
             };
 
-            // Ответ поддержки
             var responseLabel = new Label
             {
                 Text = "Ваш ответ:",
@@ -1398,10 +1383,8 @@ namespace Online_Shop_Pet_Project
 
                 try
                 {
-                    // Обновляем жалобу в базе данных
                     UpdateComplaintInDatabase(complaint.Id, responseBox.Text, "Решена");
 
-                    // Отправляем уведомление пользователю
                     SendNotificationToUser(complaint.CustomerName,
                                         $"Ответ на вашу жалобу #{complaint.Id}: {responseBox.Text}");
 
@@ -1417,7 +1400,6 @@ namespace Online_Shop_Pet_Project
                 }
             };
 
-            // Кнопка закрытия
             var closeButton = new Button
             {
                 Text = "Закрыть",
@@ -1430,7 +1412,6 @@ namespace Online_Shop_Pet_Project
             };
             closeButton.Click += (s, e) => form.Close();
 
-            // Добавляем все элементы на форму
             form.Controls.Add(idLabel);
             form.Controls.Add(customerLabel);
             form.Controls.Add(phoneLabel);
@@ -1443,7 +1424,6 @@ namespace Online_Shop_Pet_Project
             form.Controls.Add(saveButton);
             form.Controls.Add(closeButton);
 
-            // Настройка поведения формы
             form.AcceptButton = saveButton;
             form.CancelButton = closeButton;
 
@@ -1574,7 +1554,6 @@ namespace Online_Shop_Pet_Project
                 detailsButton.Click += (s, e) => ShowUserTicketDetails((int)detailsButton.Tag);
                 ticketPanel.Controls.Add(detailsButton);
 
-                // Кнопка просмотра ответа (если он есть)
                 if (!string.IsNullOrEmpty(ticket.Answer))
                 {
                     var viewAnswerButton = new Button
@@ -1646,7 +1625,6 @@ namespace Online_Shop_Pet_Project
                 MaximizeBox = false
             };
 
-            // Основные метки
             var titleLabel = new Label
             {
                 Text = ticket.Subject,
@@ -1663,7 +1641,6 @@ namespace Online_Shop_Pet_Project
                 AutoSize = true
             };
 
-            // Информационная панель
             var infoPanel = new Panel
             {
                 Location = new Point(20, 80),
@@ -1689,7 +1666,6 @@ namespace Online_Shop_Pet_Project
 
             infoPanel.Controls.AddRange(new Control[] { categoryLabel, priorityLabel });
 
-            // Описание
             var descriptionLabel = new Label
             {
                 Text = "Описание:",
@@ -1709,7 +1685,6 @@ namespace Online_Shop_Pet_Project
                 BorderStyle = BorderStyle.FixedSingle
             };
 
-            // Кнопка просмотра ответа (если он есть)
             Button viewAnswerButton = null;
             if (!string.IsNullOrEmpty(ticket.Answer))
             {
@@ -1726,7 +1701,6 @@ namespace Online_Shop_Pet_Project
                 viewAnswerButton.Click += (s, e) => ShowSupportAnswer((int)viewAnswerButton.Tag);
             }
 
-            // Кнопка закрытия
             var closeButton = new Button
             {
                 Text = "Закрыть",
@@ -1799,40 +1773,6 @@ namespace Online_Shop_Pet_Project
             form.Controls.Add(closeButton);
             form.ShowDialog();
         }
-        private ChatTicket LoadChatByCustomerName(string customerName)
-        {
-            using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
-            {
-                connection.Open();
-
-                // Находим последний чат для этого клиента
-                string query = @"
-            SELECT ChatId 
-            FROM ChatMessages 
-            WHERE CustomerName = @CustomerName 
-            GROUP BY ChatId 
-            ORDER BY MAX(Timestamp) DESC 
-            LIMIT 1";
-
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@CustomerName", customerName);
-                    var result = command.ExecuteScalar();
-
-                    if (result != null)
-                    {
-                        int chatId = Convert.ToInt32(result);
-                        return new ChatTicket
-                        {
-                            Id = chatId,
-                            CustomerName = customerName,
-                            Messages = LoadChatMessages(chatId)
-                        };
-                    }
-                }
-            }
-            return null;
-        }
         private Complaint GetComplaintFromDatabase(int complaintId)
         {
             using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
@@ -1891,7 +1831,6 @@ namespace Online_Shop_Pet_Project
         {
             form.UIHelper.ClearPanels();
 
-            // Загружаем историю чата
             LoadChatHistory();
 
             form.chatPanel = new Panel
@@ -1920,7 +1859,6 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
-            // Отображаем все сообщения
             int yPos = 10;
             foreach (var message in form.currentChat.Messages.OrderBy(m => m.Time))
             {
@@ -1965,7 +1903,6 @@ namespace Online_Shop_Pet_Project
                 yPos += 90;
             }
 
-            // Прокручиваем к последнему сообщению
             messagesPanel.ScrollControlIntoView(messagesPanel.Controls[messagesPanel.Controls.Count - 1]);
 
             form.chatPanel.Controls.Add(messagesPanel);
@@ -1992,7 +1929,6 @@ namespace Online_Shop_Pet_Project
             {
                 if (!string.IsNullOrWhiteSpace(messageTextBox.Text))
                 {
-                    // Добавляем сообщение пользователя
                     var userMessage = new ChatMessage
                     {
                         Sender = form.userProfile.Name,
@@ -2001,24 +1937,20 @@ namespace Online_Shop_Pet_Project
                         IsSupport = false
                     };
 
-                    // Сохраняем в базу данных
                     SaveChatMessage(form.currentChat.Id, userMessage.Sender, userMessage.Text, false);
 
-                    // Добавляем в текущий чат
                     form.currentChat.Messages.Add(userMessage);
 
-                    // Отправляем на сервер
                     if (isConnected)
                     {
                         SendNetworkMessage(messageTextBox.Text);
                     }
 
                     messageTextBox.Text = "";
-                    ShowChatWithSupport(); // Обновляем чат
+                    ShowChatWithSupport(); 
                 }
             };
 
-            // Отправка по Enter
             messageTextBox.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter && !string.IsNullOrWhiteSpace(messageTextBox.Text))
@@ -2045,49 +1977,6 @@ namespace Online_Shop_Pet_Project
             form.chatPanel.Controls.Add(backButton);
 
             form.Controls.Add(form.chatPanel);
-        }
-        private ChatTicket LoadExistingChat(string customerName)
-        {
-            using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
-            {
-                connection.Open();
-
-                // Находим последний чат для этого пользователя
-                string query = @"
-        SELECT ChatId, MAX(Timestamp) as LastMessageTime 
-        FROM ChatMessages 
-        WHERE CustomerName = @CustomerName 
-        GROUP BY ChatId 
-        ORDER BY LastMessageTime DESC 
-        LIMIT 1";
-
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@CustomerName", customerName);
-                    using (var reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            int chatId = Convert.ToInt32(reader["ChatId"]);
-                            return new ChatTicket
-                            {
-                                Id = chatId,
-                                Subject = "Продолжение разговора",
-                                CreatedDate = DateTime.Parse(reader["LastMessageTime"].ToString()),
-                                Status = "Открыт",
-                                CustomerName = customerName,
-                                Messages = LoadChatMessages(chatId)
-                            };
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        private int GenerateNewChatId()
-        {
-            return new Random().Next(1000, 9999);
         }
         private void SaveChatMessage(int chatId, ChatMessage message)
         {
@@ -2132,29 +2021,6 @@ namespace Online_Shop_Pet_Project
                     command.Parameters.AddWithValue("@Timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     command.Parameters.AddWithValue("@IsSupport", isSupport ? 1 : 0);
                     command.Parameters.AddWithValue("@CustomerName", form.currentChat?.CustomerName ?? "Неизвестный клиент");
-                    command.ExecuteNonQuery();
-                }
-            }
-        }
-
-        private void SaveChatMessageToDatabase(int chatId, ChatMessage message)
-        {
-            using (var connection = new SQLiteConnection(databaseHelper.GetConnectionString()))
-            {
-                connection.Open();
-                string query = @"
-                INSERT INTO ChatMessages 
-                (ChatId, Sender, Message, Timestamp, IsSupport) 
-                VALUES 
-                (@ChatId, @Sender, @Message, @Timestamp, @IsSupport)";
-
-                using (var command = new SQLiteCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@ChatId", chatId);
-                    command.Parameters.AddWithValue("@Sender", message.Sender);
-                    command.Parameters.AddWithValue("@Message", message.Text);
-                    command.Parameters.AddWithValue("@Timestamp", message.Time.ToString("yyyy-MM-dd HH:mm:ss"));
-                    command.Parameters.AddWithValue("@IsSupport", message.IsSupport ? 1 : 0);
                     command.ExecuteNonQuery();
                 }
             }

@@ -85,6 +85,21 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.White
             };
 
+            var logoutButton = new Button
+            {
+                Text = "Выйти",
+                BackColor = Color.FromArgb(220, 53, 69), // Красный цвет для кнопки выхода
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(80, 30),
+                Location = new Point(form.ClientSize.Width - 100, 10),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            logoutButton.FlatAppearance.BorderSize = 0;
+            logoutButton.Click += (s, e) => Logout();
+            form.profilePanel.Controls.Add(logoutButton);
+
             var title = new Label
             {
                 Text = "Личный кабинет",
@@ -713,6 +728,23 @@ namespace Online_Shop_Pet_Project
                 {
                     MessageBox.Show($"Ошибка загрузки изображения: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+            }
+        }
+        private void Logout()
+        {
+            var result = MessageBox.Show("Вы уверены, что хотите выйти из аккаунта?",
+                                       "Выход из системы",
+                                       MessageBoxButtons.YesNo,
+                                       MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                CurrentUser.Clear();
+
+                form.Close();
+
+                var loginForm = new LoginForm();
+                loginForm.Show();
             }
         }
     }

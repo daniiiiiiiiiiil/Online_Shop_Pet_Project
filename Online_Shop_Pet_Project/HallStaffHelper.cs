@@ -109,6 +109,21 @@ namespace Online_Shop_Pet_Project
                 BackColor = Color.White
             };
 
+            var profileButton = new Button
+            {
+                Text = "👤 Профиль",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(100, 30),
+                Location = new Point(form.ClientSize.Width - 120, 10),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+            };
+            profileButton.FlatAppearance.BorderSize = 0;
+            profileButton.Click += (s, e) => form.ProfileHelper.ShowProfilePanel();
+            form.hallStaffOrdersPanel.Controls.Add(profileButton);
+
             var title = new Label
             {
                 Text = "Заказы для сборки",

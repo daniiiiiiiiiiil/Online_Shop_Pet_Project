@@ -104,5 +104,14 @@ namespace Online_Shop_Pet_Project
             base.OnFormClosing(e);
             CurrentUser.Clear(); 
         }
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            base.OnFormClosed(e);
+            if (CurrentUser.Id != 0)
+            {
+                var loginForm = new LoginForm();
+                loginForm.Show();
+            }
+        }
     }
 }

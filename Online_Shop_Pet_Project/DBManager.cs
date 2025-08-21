@@ -77,85 +77,38 @@ namespace Online_Shop_Pet_Project
         }
 
         public static bool RegisterUser(string username, string email, string phone, string password,
-                                      bool isEmployee, string documentsPath = null, string photoPath = null)
+                               bool isEmployee, string documentsPath, string photoPath, out int userId)
         {
+            userId = -1;
             try
             {
-                if (UserExists(username, email, phone))
-                {
-                    string conflictField = GetConflictField(username, email, phone);
-                    MessageBox.Show($"Пользователь с таким {conflictField} уже существует",
-                                  "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-
-                string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
-
                 using (var connection = new SQLiteConnection(connectionString))
                 {
                     connection.Open();
 
-                    using (var transaction = connection.BeginTransaction())
+                    // Вставляем пользователя и получаем его ID
+                    string query = @"INSERT INTO Users (Username, Email, Phone, Password, IsEmployee, PhotoPath, DocumentsPath) 
+                            VALUES (@Username, @Email, @Phone, @Password, @IsEmployee, @PhotoPath, @DocumentsPath);
+                            SELECT last_insert_rowid();";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
                     {
-                        try
-                        {
-                            string insertUser = @"
-                                INSERT INTO Users (Username, Email, Phone, PasswordHash, IsEmployee, DocumentsPath, PhotoPath)
-                                VALUES (@username, @email, @phone, @passwordHash, @isEmployee, @documentsPath, @photoPath)";
+                        cmd.Parameters.AddWithValue("@Username", username);
+                        cmd.Parameters.AddWithValue("@Email", email);
+                        cmd.Parameters.AddWithValue("@Phone", phone);
+                        cmd.Parameters.AddWithValue("@Password", password);
+                        cmd.Parameters.AddWithValue("@IsEmployee", isEmployee);
+                        cmd.Parameters.AddWithValue("@PhotoPath", photoPath);
+                        cmd.Parameters.AddWithValue("@DocumentsPath", documentsPath);
 
-                            using (var command = new SQLiteCommand(insertUser, connection))
-                            {
-                                command.Parameters.AddWithValue("@username", username);
-                                command.Parameters.AddWithValue("@email", email ?? "");
-                                command.Parameters.AddWithValue("@phone", phone ?? "");
-                                command.Parameters.AddWithValue("@passwordHash", passwordHash);
-                                command.Parameters.AddWithValue("@isEmployee", isEmployee ? 1 : 0);
-                                command.Parameters.AddWithValue("@documentsPath", documentsPath ?? "");
-                                command.Parameters.AddWithValue("@photoPath", photoPath ?? "");
-                                command.ExecuteNonQuery();
-                            }
-
-                            int userId = (int)connection.LastInsertRowId;
-
-                            string insertProfile = @"
-                                INSERT INTO Profiles (UserId, FullName)
-                                VALUES (@userId, @fullName)";
-
-                            using (var command = new SQLiteCommand(insertProfile, connection))
-                            {
-                                command.Parameters.AddWithValue("@userId", userId);
-                                command.Parameters.AddWithValue("@fullName", username);
-                                command.ExecuteNonQuery();
-                            }
-
-                            if (isEmployee)
-                            {
-                                string insertEmployee = @"
-                                    INSERT INTO Employees (UserId, Position, Salary)
-                                    VALUES (@userId, 'Новый сотрудник', 30000)";
-
-                                using (var command = new SQLiteCommand(insertEmployee, connection))
-                                {
-                                    command.Parameters.AddWithValue("@userId", userId);
-                                    command.ExecuteNonQuery();
-                                }
-                            }
-
-                            transaction.Commit();
-                            return true;
-                        }
-                        catch (Exception ex)
-                        {
-                            transaction.Rollback();
-                            MessageBox.Show($"Ошибка регистрации: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return false;
-                        }
+                        userId = Convert.ToInt32(cmd.ExecuteScalar());
+                        return true;
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка регистрации: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ошибка регистрации: {ex.Message}");
                 return false;
             }
         }
